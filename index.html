@@ -1,0 +1,1756 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-7EIPvRY0uutGGiTaBfD/vRWsAVejXaih6EYZ9nu87ek=' 'sha256-0o65CtOg0v5YmiGUtoMjpgddCLP/NFVtJpDNUG2OOBg='; style-src 'unsafe-inline'; style-src-elem 'sha256-Gv2W9XyReNjfd8E2wfzL4UESgECtZlPO7viBG4Su6fE='; style-src-attr 'unsafe-inline'; img-src data: blob:; connect-src 'none'; font-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CDSA Study Tracker</title>
+<meta name="theme-color" content="#0B0F19" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F1F4F9" media="(prefers-color-scheme: light)">
+<script>/* set the theme before first paint (dark is the default) */try{var _s=JSON.parse(localStorage.getItem("cdsa-tracker-v4")||"null"),_t=_s&&_s.theme;if(_t==="light"||_t==="dark")document.documentElement.setAttribute("data-theme",_t);else if(_t!=="system")document.documentElement.setAttribute("data-theme","dark");}catch(e){document.documentElement.setAttribute("data-theme","dark");}</script>
+<meta name="description" content="A section-by-section study tracker for the HTB SOC Analyst path and the CDSA exam. Works offline; progress is saved in your browser.">
+<style>
+:root{
+  /* HTB CDSA theme: dark is the default. Colours and style only, no logos or artwork. */
+  --bg:#0B0F19; --surface:#111927; --surface2:#172133; --line:#1F2B40; --line2:#31405A;
+  --fg:#E8EEF8; --muted:#A3B0C5; --faint:#7F8FA9;
+  --accent:#9FEF00; --accent-fg:#0B1300; --accent-soft:#16260A; --accent-t:#9FEF00;
+  --cyan:#5CB2FF; --cyan-soft:#0F2740;
+  --amber:#FFAF00; --amber-soft:#33260A;
+  --bad:#FF3E3E; --bad-soft:#3A1416;
+  --ring-track:#1B2639; --shadow:0 0 0 1px rgba(159,239,0,.02);
+  --f-head:'Sora',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  --h1:#112033; --h2:#0D1624; --grid:rgba(159,239,0,.10); --scan:rgba(159,239,0,.05);
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    --bg:#F1F4F9; --surface:#FFFFFF; --surface2:#F5F7FB; --line:#DFE5EE; --line2:#C3CDDB;
+    --fg:#0B1220; --muted:#4A5870; --faint:#5F6E87;
+    --accent:#2F7D00; --accent-fg:#FFFFFF; --accent-soft:#E4F5CD; --accent-t:#286B00;
+    --cyan:#0A6FA3; --cyan-soft:#DDF0FB;
+    --amber:#8A5300; --amber-soft:#FFF0D1;
+    --bad:#B3261E; --bad-soft:#FBE4E1;
+    --ring-track:#E3E9F1; --shadow:0 1px 2px rgba(11,18,32,.05),0 6px 20px rgba(11,18,32,.05);
+    --h1:#EAF8D7; --h2:#F6FBEE; --grid:rgba(47,125,0,.14); --scan:rgba(47,125,0,.06);
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#F1F4F9; --surface:#FFFFFF; --surface2:#F5F7FB; --line:#DFE5EE; --line2:#C3CDDB;
+  --fg:#0B1220; --muted:#4A5870; --faint:#5F6E87;
+  --accent:#2F7D00; --accent-fg:#FFFFFF; --accent-soft:#E4F5CD; --accent-t:#286B00;
+  --cyan:#0A6FA3; --cyan-soft:#DDF0FB;
+  --amber:#8A5300; --amber-soft:#FFF0D1;
+  --bad:#B3261E; --bad-soft:#FBE4E1;
+  --ring-track:#E3E9F1; --shadow:0 1px 2px rgba(11,18,32,.05),0 6px 20px rgba(11,18,32,.05);
+  --h1:#EAF8D7; --h2:#F6FBEE; --grid:rgba(47,125,0,.14); --scan:rgba(47,125,0,.06);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 var(--f-body);-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent-t)}
+h1,h2,h3,h4{font-family:var(--f-head);margin:0;letter-spacing:-.01em;text-wrap:balance}
+p{margin:0}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent-t);outline-offset:2px;border-radius:6px}
+
+/* shell */
+.app{display:grid;grid-template-columns:minmax(0,1fr);min-height:100vh}
+.side{display:none}
+.main{min-width:0;padding:20px max(16px,env(safe-area-inset-left,0px)) 108px max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:20px;width:100%}
+.wrap .wrap{margin:0;max-width:none}
+@media (min-width:960px){
+  .app{grid-template-columns:248px minmax(0,1fr)}
+  .side{display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh;padding:22px 16px;border-right:1px solid var(--line);background:var(--surface)}
+  .main{padding:32px 36px 60px}
+  .bottom{display:none!important}
+}
+.brand{display:flex;align-items:center;gap:10px;padding:0 6px}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;font:700 13px var(--f-mono);letter-spacing:-.02em}
+.brand b{display:block;font:700 15px var(--f-head);line-height:1.1}
+.brand small{color:var(--muted);font-size:12px}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav button{display:flex;align-items:center;gap:12px;border:0;background:transparent;padding:10px 12px;border-radius:10px;color:var(--muted);font-weight:600;text-align:left}
+.nav button:hover{background:var(--surface2);color:var(--fg)}
+.nav button[aria-current="page"]{background:var(--accent-soft);color:var(--accent-t)}
+.nav svg,.bottom svg{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.side-foot{margin-top:auto;display:flex;flex-direction:column;gap:10px}
+.mini{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px}
+.mini .row{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px}
+.mini .row b{color:var(--fg);font-family:var(--f-mono)}
+.bottom{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(5,1fr);background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:6px max(8px,env(safe-area-inset-left,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-right,0px))}
+.bottom button{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:transparent;color:var(--muted);font-size:11px;font-weight:600;padding:6px 0;border-radius:10px}
+.bottom button[aria-current="page"]{color:var(--accent-t)}
+.bottom button[aria-current="page"] svg{stroke-width:2.2}
+
+/* generic */
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.top h1{font-size:26px;line-height:1.15;margin-top:6px}
+.top p{color:var(--muted);margin-top:4px;max-width:60ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:18px}
+.card h3{font-size:15px;margin-bottom:12px}
+.eyebrow{font:600 11px var(--f-mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line2);background:var(--surface);color:var(--fg);padding:9px 14px;border-radius:10px;font-weight:600;font-size:14px;line-height:1.2;min-height:40px}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.sm{padding:6px 10px;min-height:32px;font-size:13px;border-radius:8px}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.ghost:hover{background:var(--surface2);color:var(--fg)}
+.btn.danger{color:var(--bad);border-color:var(--bad-soft)}
+.btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.chip{display:inline-flex;align-items:center;gap:5px;font:600 11px var(--f-mono);padding:3px 8px;border-radius:999px;background:var(--surface2);color:var(--muted);border:1px solid var(--line);white-space:nowrap}
+.chip.acc{background:var(--accent-soft);color:var(--accent-t);border-color:transparent}
+.chip.cy{background:var(--cyan-soft);color:var(--cyan);border-color:transparent}
+.chip.am{background:var(--amber-soft);color:var(--amber);border-color:transparent}
+.chip.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.bar{height:7px;border-radius:99px;background:var(--ring-track);overflow:hidden}
+.bar i{display:block;position:relative;overflow:hidden;height:100%;border-radius:99px;background:var(--accent);transition:width .35s ease}
+.bar.cy i{background:var(--cyan)}
+input[type=text],input[type=date],input[type=number],input[type=search],textarea,select{width:100%;background:var(--surface2);border:1px solid var(--line2);border-radius:10px;padding:9px 12px;min-height:40px}
+textarea{resize:vertical;min-height:84px;line-height:1.5}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent-t);outline-offset:0;border-color:transparent}
+label.f{display:flex;flex-direction:column;gap:6px;font:600 12.5px var(--f-mono);color:var(--muted)}
+.grid2{display:grid;gap:14px;grid-template-columns:minmax(0,1fr);align-items:start}
+.grid2>*,.card,.hero>*,.tiles>*,.wrap>*{min-width:0}
+a.btn{text-decoration:none}
+a.btn.primary{color:var(--accent-fg)}
+@media (min-width:760px){.grid2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.tiles{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (min-width:760px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile b{font:700 26px/1.1 var(--f-mono);font-variant-numeric:tabular-nums}
+.tile span{color:var(--muted);font:500 12px var(--f-mono);letter-spacing:.02em}
+.tile small{color:var(--faint);font-size:12px}
+.good{color:var(--accent-t)} .warnt{color:var(--amber)} .badt{color:var(--bad)}
+
+/* checkbox */
+.cb{appearance:none;-webkit-appearance:none;width:22px;height:22px;flex:none;margin:0;border-radius:7px;border:2px solid var(--line2);background:var(--surface);display:inline-grid;place-items:center;cursor:pointer;transition:background .12s,border-color .12s}
+.cb:hover{border-color:var(--accent-t)}
+.cb:checked{background:var(--accent-soft);border-color:var(--accent)}
+.cb:checked::after{content:"";width:6px;height:11px;border:solid var(--accent-t);border-width:0 2.5px 2.5px 0;transform:translateY(-1px) rotate(45deg)}
+
+/* dashboard */
+.hero{position:relative;isolation:isolate;overflow:hidden;display:grid;gap:18px;grid-template-columns:minmax(0,1fr);background:linear-gradient(135deg,var(--h1),var(--h2));border:1px solid var(--line);border-radius:20px;padding:22px}
+/* grid + scanline texture: hero only, masked away from the text column */
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(var(--grid) 1px,transparent 1px) 0 0/28px 28px,linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/28px 28px,repeating-linear-gradient(0deg,var(--scan) 0 1px,transparent 1px 4px);-webkit-mask-image:linear-gradient(to top,#000 0,transparent 42%);mask-image:linear-gradient(to top,#000 0,transparent 42%)}
+@media (min-width:760px){.hero::before{-webkit-mask-image:linear-gradient(to left,#000 0,transparent 46%);mask-image:linear-gradient(to left,#000 0,transparent 46%)}}
+@media (min-width:760px){.hero{grid-template-columns:minmax(0,1fr) auto;align-items:center;padding:26px 30px}}
+.hero h2{font-size:22px;line-height:1.25;margin:6px 0 4px}
+.hero .hint{color:var(--muted);margin-bottom:16px;max-width:56ch}
+.hero .acts{display:flex;gap:10px;flex-wrap:wrap}
+.ringbox{position:relative;width:148px;height:148px;justify-self:center}
+.ringbox svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ringbox .c{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ringbox .c b{font:700 30px/1 var(--f-head)}
+.ringbox .c span{font-size:12px;color:var(--muted)}
+.stagebar{display:flex;flex-direction:column;gap:14px}
+.sb{display:flex;flex-direction:column;gap:7px}
+.sb .l{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.sb .l b{font-size:14px}
+.sb .l span{font:500 12px var(--f-mono);color:var(--muted)}
+.heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,1fr);gap:4px}
+.heat i{aspect-ratio:1;border-radius:4px;background:var(--ring-track);min-width:0}
+.heat i.l1{background:color-mix(in srgb,var(--accent) 32%,var(--ring-track))}
+.heat i.l2{background:color-mix(in srgb,var(--accent) 58%,var(--ring-track))}
+.heat i.l3{background:color-mix(in srgb,var(--accent) 82%,var(--ring-track))}
+.heat i.l4{background:var(--accent)}
+.heat i.today{outline:2px solid var(--fg);outline-offset:-2px}
+.heatwrap{overflow-x:auto;padding-bottom:2px}
+.heatwrap .heat{min-width:420px}
+.legend{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--faint);margin-top:8px;justify-content:flex-end}
+.legend i{width:11px;height:11px;border-radius:3px;background:var(--ring-track)}
+.upnext{display:flex;flex-direction:column;gap:2px}
+.up{display:flex;align-items:center;gap:12px;padding:10px 4px;border-top:1px solid var(--line);text-align:left;background:none;border-left:0;border-right:0;border-bottom:0;width:100%}
+.up:first-child{border-top:0}
+.up:hover{background:var(--surface2)}
+.up .n{flex:1;min-width:0}
+.up .n b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.up .n small{color:var(--muted);font-size:12px}
+
+/* path */
+.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.tools .search{flex:1 1 220px}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{border:1px solid var(--line2);background:var(--surface);color:var(--muted);padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600}
+.pill[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.stage{display:flex;flex-direction:column;gap:12px}
+.stage-h{display:flex;align-items:center;gap:12px;padding:6px 2px}
+.stage-h .no{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font:700 15px var(--f-mono);background:var(--cyan-soft);color:var(--cyan);flex:none}
+.stage-h.s1 .no{background:var(--accent-soft);color:var(--accent-t)}
+.stage-h h2{font-size:19px}
+.stage-h p{color:var(--muted);font-size:13px}
+.stage-h .r{margin-left:auto;font:600 13px var(--f-mono);color:var(--muted);white-space:nowrap}
+.phase{font:600 11px var(--f-mono);letter-spacing:.09em;text-transform:uppercase;color:var(--faint);margin:10px 2px 0}
+.mod{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.mod.done{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.mod.skipped{opacity:.6}
+.mh{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;padding:14px 16px;text-align:left}
+.mh:hover{background:var(--surface2)}
+.idx{width:34px;height:34px;border-radius:10px;background:var(--surface2);border:1px solid var(--line);display:grid;place-items:center;font:700 12px var(--f-mono);color:var(--muted);flex:none}
+.mod.done .idx{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.mh .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.mh .t b{font:600 15px/1.3 var(--f-head)}
+.mh .meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.mh .pr{display:flex;flex-direction:column;align-items:flex-end;gap:6px;width:92px;flex:none}
+.mh .pr span{font:600 12px var(--f-mono);color:var(--muted)}
+.mh .pr .bar{width:100%}
+.chev{width:18px;height:18px;stroke:var(--faint);fill:none;stroke-width:2;flex:none;transition:transform .2s}
+.mod.open .chev{transform:rotate(180deg)}
+.mb{border-top:1px solid var(--line);padding:16px;display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:860px){.mb{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);padding:18px 20px}}
+.mb-top{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.secs{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.sec{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border-top:1px solid var(--line);background:var(--surface)}
+.sec:first-child{border-top:0}
+.sec:hover{background:var(--surface2)}
+.sec .cb{margin-top:1px}
+.sec .tx{flex:1;min-width:0;cursor:pointer}
+.sec .tx b{display:block;font-weight:600;font-size:14px;line-height:1.35}
+.sec .tx small{display:block;color:var(--muted);font-size:12.5px;margin-top:1px}
+.sec .no{font:500 11px var(--f-mono);color:var(--faint);margin-right:6px}
+.sec.done .tx b{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line2)}
+.sec.done .tx small{color:var(--faint)}
+.sec .d{font:500 10.5px var(--f-mono);color:var(--faint);white-space:nowrap;margin-top:3px}
+.flag{border:0;background:transparent;color:var(--line2);padding:2px;border-radius:6px;margin-top:-1px}
+.flag svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linejoin:round}
+.flag:hover{color:var(--amber)}
+.flag.on{color:var(--amber)} .flag.on svg{fill:currentColor}
+.guide{display:flex;flex-direction:column;gap:16px;min-width:0}
+.guide h4{font:600 11px var(--f-mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.guide ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px;font-size:14px}
+.guide li::marker{color:var(--accent-t)}
+.guide p{font-size:14px}
+.note-box{display:flex;flex-direction:column;gap:6px}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+
+/* lists */
+.checks{display:flex;flex-direction:column}
+.crow{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--line)}
+.crow:first-child{border-top:0}
+.crow label{flex:1;min-width:0;display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+.crow .tx small{display:block;color:var(--muted);font-size:12.5px}
+.crow.done .tx>b{color:var(--muted);text-decoration:line-through}
+.count{display:flex;align-items:center;gap:6px}
+.count .btn{padding:0;width:32px;min-height:32px}
+.count b{min-width:44px;text-align:center;font-family:var(--f-mono)}
+.codebox{position:relative}
+.codebox pre{margin:0;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:46px 14px 14px;overflow-x:auto;font:13px/1.55 var(--f-mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.codebox .btn{position:absolute;top:8px;right:8px}
+.evs{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:760px){.evs{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.ev{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.ev b{font-size:14px}
+.ev .mono{color:var(--accent-t);font-size:12.5px}
+.ev small{color:var(--muted)}
+.res{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line);text-decoration:none;color:inherit}
+.res:first-child{border-top:0}
+.res:hover b{text-decoration:underline}
+.res .n{flex:1;min-width:0}
+.res .n small{display:block;color:var(--muted)}
+.res .n em{font:500 11px var(--f-mono);color:var(--faint);font-style:normal}
+.app-row{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.app-row:first-child{border-top:0}
+.app-row .n{flex:1;min-width:160px}
+.app-row .n small{display:block;color:var(--muted)}
+.row2{display:grid;gap:10px;grid-template-columns:1fr}
+@media (min-width:640px){.row2{grid-template-columns:1fr 1fr auto}}
+
+/* dialog + toast */
+dialog{border:1px solid var(--line2);background:var(--surface);color:var(--fg);border-radius:20px;padding:0;width:min(560px,calc(100vw - 24px));max-height:calc(100vh - 32px);box-shadow:0 24px 80px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(5,8,14,.6);backdrop-filter:blur(3px)}
+.dlg{display:flex;flex-direction:column;max-height:inherit}
+.dlg header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+.dlg header h3{font-size:17px}
+.dlg .body{padding:18px 20px;overflow:auto;display:flex;flex-direction:column;gap:18px}
+.dlg h4{font:600 11px var(--f-mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.days{display:flex;gap:6px;flex-wrap:wrap}
+.days button{width:44px;height:40px;border-radius:10px;border:1px solid var(--line2);background:var(--surface2);font-weight:600;font-size:13px;color:var(--muted)}
+.days button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:var(--surface2);padding:8px 14px;font-weight:600;font-size:13px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.mlist{display:flex;flex-direction:column;max-height:230px;overflow:auto;border:1px solid var(--line);border-radius:12px}
+.mlist label{display:flex;gap:10px;align-items:center;padding:8px 12px;border-top:1px solid var(--line);font-size:14px;cursor:pointer}
+.mlist label:first-child{border-top:0}
+.toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--surface2);color:var(--fg);border:1px solid var(--accent);padding:10px 14px;border-radius:12px;display:flex;gap:14px;align-items:center;font-size:14px;font-weight:500;z-index:60;transition:all .2s;max-width:calc(100vw - 32px);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+@media (min-width:960px){.toast{bottom:28px}}
+.toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.toast button{border:0;background:transparent;color:var(--accent-t);font-weight:700;text-decoration:underline;padding:0}
+.note{font-size:13px;color:var(--muted)}
+.hide{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* day plan */
+.weekgrp{display:flex;flex-direction:column;gap:10px}
+.wkh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:14px 2px 2px;font-size:13px;color:var(--muted)}
+.wkh b{font:600 12px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.day.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.day.done{border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.dh{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;padding:12px 14px;text-align:left}
+.dh:hover{background:var(--surface2)}
+.dn{width:34px;height:34px;border-radius:10px;background:var(--surface2);border:1px solid var(--line);display:grid;place-items:center;font-weight:700;font-size:12px;color:var(--muted);flex:none}
+.day.done .dn{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.day.today .dn{border-color:var(--accent);color:var(--accent-t)}
+.dh .t{flex:1;min-width:0;display:flex;flex-direction:column}
+.dh .t b{font-size:14.5px}
+.dh .t small{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh .cnt{font-size:12px;font-weight:600;color:var(--muted)}
+.day.open .chev{transform:rotate(180deg)}
+.db{border-top:1px solid var(--line);padding:6px 14px 14px}
+.dr{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.dr:first-child{border-top:0}
+.dr label{flex:1;min-width:0;cursor:pointer}
+.dr label b{display:block;font-weight:600;font-size:14px}
+.dr label small{display:block;color:var(--muted);font-size:12.5px;margin-top:3px;line-height:1.6}
+.dr label small .chip{margin-right:4px}
+.dr.done label b{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line2)}
+.dfoot{display:flex;flex-direction:column;gap:10px;align-items:flex-start;margin-top:10px}
+.dfoot textarea{min-height:64px}
+.bottom{grid-template-columns:repeat(5,1fr)}
+.bottom button{font-size:10.5px}
+
+.side .clock{margin:-8px 6px 0;font-size:12px;color:var(--muted);padding:8px 10px;background:var(--surface2);border:1px solid var(--line);border-radius:10px}
+.mtop .clock{display:block}
+
+/* v4 additions */
+.dlist{display:flex;flex-direction:column}
+.dlist .dr:first-child{border-top:0}
+.tm{font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.row-btn{display:flex;gap:8px;flex-wrap:wrap}
+.rv{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}
+.rvn{flex:1;min-width:0}
+.rvn b{display:block;font-size:14px}
+.rvn small{color:var(--muted);font-size:12.5px}
+.rvn details{margin-top:6px;font-size:13px;color:var(--muted)}
+.rvn summary{cursor:pointer;color:var(--accent-t);font-weight:600}
+.rvb{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.badges{display:flex;gap:8px;flex-wrap:wrap}
+.bdg{font:600 12px var(--f-mono);padding:6px 10px;border-radius:999px;border:1px dashed var(--line2);color:var(--faint)}
+.bdg.on{border-style:solid;border-color:transparent;background:var(--accent-soft);color:var(--accent-t)}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end}
+.wc{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.wc .wb{width:100%;max-width:34px;height:92px;display:flex;align-items:flex-end;background:var(--surface2);border-radius:8px;overflow:hidden}
+.wc .wb i{display:block;width:100%;background:var(--accent);opacity:.55;border-radius:6px 6px 0 0}
+.wc.td .wb i{opacity:1}
+.wc .wn{font-size:12px;font-weight:700}
+.wc .wd{font-size:11px;color:var(--muted)}
+.wc .wm{font-size:10px;color:var(--faint);min-height:12px}
+.res{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.res:first-child{border-top:0}
+.res .n{flex:1;min-width:0;text-decoration:none;color:inherit}
+.res .n b{display:block}
+.res .n:hover b{text-decoration:underline}
+.res .n small{display:block;color:var(--muted);font-size:12.5px}
+.res .n em{font:500 11px var(--f-mono);color:var(--faint);font-style:normal}
+.star{border:0;background:transparent;color:var(--line2);padding:4px;border-radius:8px;flex:none}
+.star svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linejoin:round}
+.star:hover{color:var(--amber)}
+.star.on{color:var(--amber)}.star.on svg{fill:currentColor}
+.day.missed{opacity:.85}
+.day.missed .dn{border-style:dashed}
+
+/* problems after module */
+.probs{border:1px solid var(--line);border-radius:var(--r2,14px);padding:14px 16px;background:var(--card2,transparent);min-width:0}
+.probs.ready{border-color:var(--accent-t);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent-t) 14%,transparent)}
+.probs-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.probs-h h4{font:600 11px var(--f-mono);letter-spacing:.09em;text-transform:uppercase;color:var(--accent-t);margin:0}
+.probs .note{margin:4px 0 6px;font-size:13px}
+.prob .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.prob>.btn{flex:none;max-width:42%;white-space:normal;text-align:center}
+.rmlist{display:flex;flex-direction:column;gap:8px}
+.rm{border:1px solid var(--line);border-radius:12px;padding:0 14px;min-width:0}
+.rm summary{display:flex;gap:10px;align-items:center;padding:12px 0;cursor:pointer;list-style:none}
+.rm summary::-webkit-details-marker{display:none}
+.rm summary b{flex:1;min-width:0}
+.rm summary .idx{font:600 12px var(--f-mono);color:var(--accent-t);min-width:26px}
+.rm[open] summary{border-bottom:1px solid var(--line)}
+.tips{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.tips small{display:block;color:var(--muted);font-size:12px}
+@media(max-width:560px){.prob{flex-wrap:wrap}.prob>label{flex:1 1 100%}.prob>.btn{max-width:none;margin-left:34px}}
+
+.mtop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:-4px 0 14px}
+@media (min-width:960px){.mtop{display:none}}
+
+/* rank + shield */
+.rankcard{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--surface2)}
+.shield{width:44px;height:52px;flex:none;display:block}
+.shield .out{fill:var(--surface);stroke:var(--line2);stroke-width:2}
+.shield .fill{fill:var(--accent)}
+.shield .rim{fill:none;stroke:var(--accent);stroke-width:2}
+.shield .chk{fill:none;stroke:var(--accent-fg);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.rk{min-width:0;display:flex;flex-direction:column;gap:2px}
+.rk .nm{font:700 14px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--accent-t)}
+.rk small{font:500 11.5px var(--f-mono);color:var(--muted);line-height:1.4}
+.mrank{display:flex;align-items:center;gap:8px;min-width:0}
+.mrank .shield{width:24px;height:28px}
+.mrank .nm{font:700 11.5px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--accent-t);white-space:nowrap}
+@media (max-width:430px){.mrank .nm{display:none}}
+.top .chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* settings switches */
+.swrow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 0;border-top:1px solid var(--line)}
+.swrow:first-of-type{border-top:0;padding-top:0}
+.swrow b{display:block;font-size:14px}
+.swrow small{display:block;color:var(--muted);font-size:12.5px;margin-top:1px}
+.swctl{display:flex;align-items:center;gap:8px;flex:none}
+.swctl span{font:600 11px var(--f-mono);color:var(--muted);min-width:22px;text-align:right}
+.switch{flex:none;width:46px;height:26px;border-radius:99px;border:2px solid var(--line2);background:var(--surface2);position:relative;padding:0;transition:background .15s,border-color .15s}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--faint);transition:transform .15s,background .15s}
+.switch[aria-checked="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.switch[aria-checked="true"]::after{transform:translateX(20px);background:var(--accent)}
+
+/* celebrations: everything here is decoration, never in the way of input */
+.fx-cv{position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:65}
+@keyframes cbpop{0%{transform:scale(1)}40%{transform:scale(1.32)}100%{transform:scale(1)}}
+@keyframes cbring{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 70%,transparent)}100%{box-shadow:0 0 0 12px transparent}}
+@keyframes cbdraw{0%{clip-path:inset(11px 8.5px 0 0)}40%{clip-path:inset(11px 0 0 0)}100%{clip-path:inset(0 0 0 0)}}
+.cb.pop{animation:cbpop .38s cubic-bezier(.3,1.6,.5,1),cbring .6s ease-out}
+.cb.pop:checked::after{animation:cbdraw .34s ease-out .04s both}
+@keyframes rowglow{from{background-color:color-mix(in srgb,var(--accent) 24%,transparent);box-shadow:inset 3px 0 0 var(--accent)}}
+.glow{animation:rowglow 1.1s ease-out}
+@keyframes shine{from{transform:translateX(-120%)}to{transform:translateX(320%)}}
+.bar i.shine::after{content:"";position:absolute;top:0;bottom:0;left:0;width:45%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.8),transparent);animation:shine .9s ease-out .35s 2 both}
+@keyframes modglow{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 60%,transparent)}100%{box-shadow:0 0 0 14px transparent}}
+.mod.just{animation:modglow 1s ease-out}
+@keyframes ringpulse{0%{transform:scale(1)}35%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes ripple{0%{opacity:.75;transform:scale(.9)}100%{opacity:0;transform:scale(1.55)}}
+.ringbox.pulse{animation:ringpulse .7s ease-out}
+.ringbox.pulse::after{content:"";position:absolute;inset:0;border-radius:50%;border:3px solid var(--accent);animation:ripple .9s ease-out forwards;pointer-events:none}
+.hero.done{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.hero.done .eyebrow{color:var(--accent-t)}
+/* static stand-in used instead of motion when the system asks for reduced motion */
+.hl{outline:2px solid var(--accent);outline-offset:-2px;background-color:var(--accent-soft)}
+.mod.hl,.hero.hl{outline-offset:0}
+.ringbox.hl{outline-offset:2px;border-radius:50%;background-color:transparent}
+.cb.hl{outline-offset:2px}
+.ach{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));transform:translate(-50%,-16px);opacity:0;visibility:hidden;pointer-events:none;z-index:70;width:min(440px,calc(100vw - 24px));display:flex;gap:12px;align-items:flex-start;background:var(--surface);color:var(--fg);border:1px solid var(--accent);border-radius:16px;padding:14px 12px 14px 16px;box-shadow:0 16px 50px rgba(0,0,0,.45),0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent);transition:opacity .25s,transform .25s,visibility 0s .25s}
+.ach.on{opacity:1;transform:translate(-50%,0);visibility:visible;pointer-events:auto;transition:opacity .25s,transform .25s,visibility 0s 0s}
+.ach .ic{flex:none;width:34px;height:40px}
+.ach .tx{flex:1;min-width:0}
+.ach .eyebrow{color:var(--accent-t)}
+.ach b{display:block;font:700 17px/1.25 var(--f-head);margin-top:2px}
+.ach p{color:var(--muted);font-size:13.5px;margin-top:3px}
+.ach p.also{font:500 12px var(--f-mono);color:var(--faint)}
+.ach .x{flex:none;border:0;background:transparent;color:var(--muted);font:600 12px var(--f-mono);padding:4px 6px;border-radius:8px}
+.ach .x:hover{background:var(--surface2);color:var(--fg)}
+@media (prefers-reduced-motion:reduce){
+  .cb.pop,.cb.pop:checked::after,.glow,.bar i.shine::after,.mod.just,.ringbox.pulse,.ringbox.pulse::after{animation:none!important}
+  .ach{transform:translate(-50%,0)}
+  .fx-cv{display:none!important}
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><span class="logo" aria-hidden="true">CD</span><div><b>CDSA Tracker</b><small>SOC Analyst path</small></div></div>
+    <div class="rankcard" id="rankcard"></div>
+    <div class="clock mono" aria-label="Current date and time"></div>
+    <nav class="nav" id="nav" aria-label="Sections"></nav>
+    <div class="side-foot">
+      <div class="mini" id="mini"></div>
+      <button class="btn" data-act="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>Settings and backup</button>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="wrap">
+      <div class="mtop"><div class="brand"><span class="logo" aria-hidden="true">CD</span><div><b>CDSA Tracker</b><small class="clock mono"></small></div></div><span class="mrank" id="mrank"></span><button class="btn sm" data-act="settings">Settings</button></div>
+      <div id="view" class="wrap"></div>
+    </div>
+  </main>
+  <nav class="bottom" id="bnav" aria-label="Sections"></nav>
+</div>
+<dialog id="dlg" aria-label="Settings"></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="ach" id="ach" role="status" aria-live="polite"></div>
+<script>
+/* ---------- content: Stage 0 (basics) ---------- */
+/* sec strings are "Title | one-line focus". Titles and counts match HTB Academy's public syllabus. */
+var STAGE0 = [
+ {id:'net', name:'Introduction to Networking', diff:'Fundamental', tier:'Core', slug:'introduction-to-networking',
+  why:'Every alert, log line and packet capture in the path assumes you already know ports, protocols and how a connection is built. If this is shaky, Network Traffic Analysis and the IDS module will feel twice as hard.',
+  learn:['How the OSI and TCP/IP models map onto real traffic','IPv4 addressing and subnetting by hand','What DNS, DHCP, HTTP, SMB, RDP and Kerberos do and which ports they use','TCP vs UDP, and what a normal handshake looks like'],
+  practice:['Subnet ten random networks on paper until it is quick','Run Wireshark on your own machine, load one website, and find the DNS query, the TCP handshake and the HTTP request','Write a one-page port cheat sheet (53 DNS, 88 Kerberos, 445 SMB, 3389 RDP, 5985/5986 WinRM, 389/636 LDAP)'],
+  can:['Explain what happens between typing a URL and the page loading','Work out the range, mask and broadcast of a /26','Tell a SYN scan from a normal connection in a capture'],
+  sec:['Networking Overview | What the module covers and how it is laid out.','Network Types | LAN, WAN, WLAN, VPN: where each one sits.','Networking Topologies | Star, mesh, bus. Know what a switch vs a router does.','Proxies | Forward vs reverse proxies; why logs show the proxy IP.','Networking Models | Why layered models exist.','The OSI Model | Learn all seven layers and one protocol for each.','The TCP/IP Model | The four-layer version you will actually use.','Network Layer | Routing, hops, TTL.','IPv4 Addresses | Classes, private ranges, CIDR notation.','Subnetting | Do the exercises by hand until fast.','MAC Addresses | Layer 2 identity; what ARP resolves.','IPv6 Addresses | Format, shortening rules, link-local.','Networking Key Terminology | Vocabulary you will see in every later module.','Common Protocols | HTTP, FTP, SMB, DNS, SMTP and friends, with ports.','Wireless Networks | WPA basics and why Wi-Fi attacks leave traces.','Virtual Private Networks | Tunnels, and what a VPN hides from your logs.','Vendor Specific Information | Cisco-style device terms.','Key Exchange Mechanisms | Diffie-Hellman idea; no maths needed.','Authentication Protocols | Kerberos, NTLM, RADIUS at overview level.','TCP/UDP Connections | Handshake, flags, teardown. Needed for traffic analysis.','Cryptography | Hashing vs encryption vs signing.']},
+
+ {id:'winf', name:'Windows Fundamentals', diff:'Fundamental', tier:'Core', slug:'windows-fundamentals',
+  why:'The exam and most of the path are Windows telemetry. You cannot spot a rogue service, a strange registry key or a bad process tree without knowing what normal looks like.',
+  learn:['How the file system, NTFS permissions and shares work','Registry hives and the keys attackers use for persistence','Services, processes and sessions, and which ones are normal','WMI, MMC and the built-in security features'],
+  practice:['In a Windows VM, open Task Manager and Services and write down what is normal on a clean install','Browse the Run and RunOnce keys and learn what a legitimate entry looks like','Open Event Viewer and find one logon event (4624) yourself'],
+  can:['Describe the parent and child you expect for explorer.exe, svchost.exe and services.exe','Name three registry locations used for persistence','Explain the difference between NTFS and share permissions'],
+  sec:['Introduction to Windows | Versions and why the OS matters to defenders.','Operating System Structure | System folders: what lives in System32.','File System | NTFS features, alternate data streams.','NTFS vs. Share Permissions | Effective access when both apply.','Windows Registry | Hives, Run keys, persistence spots.','Windows Services & Processes | Normal parents; services.exe and svchost.exe.','Service Permissions | Weak service permissions as an attack path.','Windows Sessions | Interactive, service and network logons.','Interacting with the Windows Operating System | GUI, CMD, PowerShell, remote access.','Windows Management Instrumentation (WMI) | Used by admins and attackers alike.','Microsoft Management Console (MMC) | Snap-ins you will meet again in AD.','Windows Subsystem for Linux (WSL) | A blind spot for some tooling.','Desktop Experience vs. Server Core | What a server install looks like.','Windows Security | Defender, UAC, Credential Guard at overview level.','Skills Assessment - Windows Fundamentals | Do it without looking back at the notes.']},
+
+ {id:'wcl', name:'Introduction to Windows Command Line', diff:'Easy', tier:'Core', slug:'introduction-to-windows-command-line',
+  why:'You will pull evidence with PowerShell (Get-WinEvent, Get-Process, services, registry) and read attacker one-liners all the time. Reading a command line fluently is half of triage.',
+  learn:['CMD and PowerShell navigation, files, services and scheduled tasks','Cmdlets, modules, pipelines and filtering','Querying the registry and the event log from the command line','Basic PowerShell scripting'],
+  practice:['Use Get-WinEvent with -FilterHashtable to pull all 4625 events from the last day','List running processes with their parent process ID, then explain two of them','Write a three-line script that exports services set to auto-start'],
+  can:['Filter an event log by ID and time range from PowerShell','Explain what a base64 -EncodedCommand argument is','List scheduled tasks and services without the GUI'],
+  sec:['Introduction | Why the command line matters in IR.','Command Prompt Basics | Syntax, flags, redirection.','Getting Help | help, /?, Get-Help. Use them constantly.','System Navigation | cd, dir, pushd.','Working with Directories and Files - CMD | Create, copy, move, hide.','Gathering System Information | systeminfo, ver, hostname, whoami.','Finding Files and Directories | where, dir /s, findstr.','Environment Variables | %PATH% and why order matters.','Managing Services | sc and net start.','Working With Scheduled Tasks | schtasks: a favourite persistence spot.','CMD Vs. PowerShell | Objects vs text.','All About Cmdlets and Modules | Verb-Noun and Get-Command.','User and Group Management | Local users, groups, who is admin.','Working with Files and Directories - PowerShell | Get-ChildItem and friends.','Finding & Filtering Content | Select-String, Where-Object.','Working with Services | Get-Service, Set-Service.','Working with the Registry | Reading and writing keys.','Working with the Windows Event Log | Get-WinEvent. Direct exam skill.','Networking Management from The CLI | netstat, Get-NetTCPConnection.','Interacting with The Web | Invoke-WebRequest: how downloaders work.','PowerShell Scripting and Automation | Loops, functions, simple scripts.','Skills Assessment | Time yourself.','Beyond This Module | Where to go next.']},
+
+ {id:'ad', name:'Introduction to Active Directory', diff:'Fundamental', tier:'Core', slug:'introduction-to-active-directory',
+  why:'Windows Attacks & Defense and Detecting Windows Attacks with Splunk are all Active Directory. Most real intrusions end up in a domain, and so does the exam.',
+  learn:['Domains, forests, OUs, objects, users, computers and groups','How Kerberos, NTLM, LDAP and DNS fit together','Privileges, rights and Group Policy','Why a domain controller is the prize'],
+  practice:['Draw a small forest with two domains and mark where Domain Admins live','Write down the Kerberos steps (AS-REQ, TGT, TGS) in your own words','Find out which GPO would disable logging and why that matters'],
+  can:['Explain TGT vs service ticket in two sentences','Say why NTLM leaves different traces than Kerberos','Name five default privileged groups'],
+  sec:['Why Active Directory? | Where AD fits in a company.','Active Directory Research Over the Years | Why attacks keep working.','Active Directory Structure | Forest, domain, tree, OU.','Active Directory Terminology | Learn the glossary; it is reused everywhere.','Active Directory Objects | Users, computers, contacts, GPOs.','Active Directory Functionality | FSMO roles, replication, trusts.','Kerberos, DNS, LDAP, MSRPC | The core protocols. Take your time.','NTLM Authentication | Challenge-response; pass-the-hash relies on it.','User and Machine Accounts | Local vs domain; service accounts.','Active Directory Groups | Built-in privileged groups.','Active Directory Rights and Privileges | SeDebug, SeBackup and friends.','Security in Active Directory | Hardening ideas you will later detect against.','Examining Group Policy | How settings reach machines.','AD Administration: Guided Lab Part I | Do the lab, do not skip it.','AD Administration: Guided Lab Part II | Same.','Wrapping It Up | Recap.']},
+
+ {id:'web', name:'Web Requests', diff:'Fundamental', tier:'Skim', slug:'web-requests',
+  why:'Short module. HTTP methods, headers and status codes show up in proxy logs, web server logs and Intermediate Network Traffic Analysis.',
+  learn:['HTTP and HTTPS basics','Requests, responses, headers, methods and status codes','GET, POST and a simple CRUD API'],
+  practice:['Use curl -v on a site and read every header','Find one 301, one 403 and one 500 response and explain each'],
+  can:['Read a raw HTTP request','Explain what a User-Agent and Referer are'],
+  sec:['HyperText Transfer Protocol (HTTP)','Hypertext Transfer Protocol Secure (HTTPS)','HTTP Requests and Responses','HTTP Headers','HTTP Methods and Codes','GET','POST','CRUD API']},
+
+ {id:'nmap', name:'Network Enumeration with Nmap', diff:'Easy', tier:'Skim', slug:'network-enumeration-with-nmap',
+  why:'You will be on the receiving end of scans. Knowing what a SYN scan or a script scan looks like in traffic and logs is the useful part; the evasion labs are optional.',
+  learn:['Host discovery and port scan types','Service and version detection','The scripting engine and how scan speed changes the noise'],
+  practice:['Scan your own VM with -sS and then -sT while capturing in Wireshark and compare','Note which packets reveal the scan type'],
+  can:['Spot a SYN scan in a capture','Explain what -sV adds'],
+  sec:['Enumeration','Introduction to Nmap','Host Discovery','Host and Port Scanning','Saving the Results','Service Enumeration','Nmap Scripting Engine','Performance','Firewall and IDS/IPS Evasion','Firewall and IDS/IPS Evasion - Easy Lab','Firewall and IDS/IPS Evasion - Medium Lab','Firewall and IDS/IPS Evasion - Hard Lab']},
+
+ {id:'ptp', name:'Penetration Testing Process', diff:'Fundamental', tier:'Skim', slug:'penetration-testing-process',
+  why:'Gives you the attacker side of the story: the stages you will be recognising in logs. Read it for the vocabulary.',
+  learn:['The stages of a penetration test','Pre-engagement, exploitation, post-exploitation and lateral movement','Laws, scope and reporting'],
+  practice:['Map each stage to the Cyber Kill Chain and to a MITRE ATT&CK tactic'],
+  can:['Say what an attacker is doing at each stage and what you would see'],
+  sec:['Introduction to the Penetration Tester Path','Academy Modules Layout','Academy Exercises & Questions','Penetration Testing Overview','Laws and Regulations','Penetration Testing Process','Pre-Engagement','Information Gathering','Vulnerability Assessment','Exploitation','Post-Exploitation','Lateral Movement','Proof-of-Concept','Post-Engagement','Practice']},
+
+ {id:'lin', name:'Linux Fundamentals', diff:'Fundamental', tier:'Later', slug:'linux-fundamentals',
+  why:'Lower priority for a Windows-heavy exam, but you will meet Linux in YARA, Zeek, Suricata and web logs. Do it if you have time or Linux commands slow you down.',
+  learn:['File system layout, permissions and users','Processes, services, cron and logs under /var/log','Everyday shell tools: grep, awk, find, redirection'],
+  practice:['Read /var/log/auth.log (or journalctl) and find a failed SSH login','Use grep and cut to count the top source IPs in a log'],
+  can:['Read a permission string like -rwsr-xr-x','Find which user ran a cron job'],
+  sec:['Linux Structure','Linux Distributions','Introduction to Shell','Prompt Description','Getting Help','System Information','Navigation','Working with Files and Directories','Editing Files','Find Files and Directories','File Descriptors and Redirections','Filter Contents','Regular Expressions','Permission Management','User Management','Package Management','Service and Process Management','Task Scheduling','Network Services','Working with Web Services','Backup and Restore','File System Management','Containerization','Network Configuration','Remote Desktop Protocols in Linux','Linux Security','Firewall Setup','System Logs and Monitoring','Solaris','Shortcuts']},
+
+ {id:'bash', name:'Introduction to Bash Scripting', diff:'Easy', tier:'Later', slug:'introduction-to-bash-scripting',
+  why:'Nice to have for log wrangling. Skip it if you are short on time; PowerShell matters more for this exam.',
+  learn:['Variables, conditions, loops and functions','Reading and writing small scripts'],
+  practice:['Write a script that counts failed logins per IP from a log file'],
+  can:['Read a ten-line Bash script and say what it does'],
+  sec:['Bourne Again Shell','Conditional Execution','Arguments, Variables, and Arrays','Comparison Operators','Arithmetic','Input and Output Control','Flow Control - Loops','Flow Control - Branches','Functions','Debugging']},
+
+ {id:'asm', name:'Intro to Assembly Language', diff:'Medium', tier:'Later', slug:'intro-to-assembly-language',
+  why:'Only worth it right before Introduction to Malware Analysis, and only if that module loses you. You do not need shellcoding to pass CDSA.',
+  learn:['CPU architecture, registers and the stack','Reading x86-64 instructions and using GDB'],
+  practice:['Open a tiny binary in GDB and step through the first ten instructions'],
+  can:['Recognise mov, push, pop, call and jmp','Explain what a syscall is'],
+  sec:['Assembly Language','Computer Architecture','CPU Architecture','Instruction Set Architectures','Registers, Addresses, and Data Types','Assembly File Structure','Assembling & Disassembling','GNU Debugger (GDB)','Debugging with GDB','Module Project','Data Movement','Arithmetic Instructions','Loops','Unconditional Branching','Conditional Branching','Using the Stack','Syscalls','Procedures','Functions','Libc Functions','Shellcodes','Shellcoding Techniques','Shellcoding Tools','Skills Assessment']}
+];
+
+/* ---------- content: Stage 1 (SOC Analyst job-role path) ---------- */
+var STAGE1 = [
+ {phase:'Process and SIEM', id:'ih', name:'Incident Handling Process', diff:'Easy', slug:'incident-handling-process',
+  why:'The frame for everything else. The exam is an incident, and the report you write follows these stages.',
+  learn:['The Cyber Kill Chain and how alerts map to it','Preparation, detection and analysis, containment, eradication and recovery, post-incident activity','A worked breach you can follow end to end'],
+  practice:['Draw the four stages from memory, then list two actions you would take in each','Pick one DFIR Report case and label its events with kill chain stages'],
+  can:['Say what you do first, second and third when an alert fires','Explain contain vs eradicate vs recover'],
+  sec:['Incident Handling | What an incident is and why a process matters.','Cyber Kill Chain | Seven stages. Map every alert to one.','Incident Handling Process Overview | The cycle. Learn it by heart.','Preparation Stage (Part 1) | Playbooks, people, tooling, communication plan.','Preparation Stage (Part 2) | Hardening, logging and detection capability.','Detection & Analysis Stage (Part 1) | Where detections come from; start your timeline.','Detection & Analysis Stage (Part 2) | Scoping, indicators, when to escalate.','Containment, Eradication, and Recovery Stage | Contain first, then clean, then restore.','Post-Incident Activity Stage | Lessons learned and the report.','Analysis of Insight Nexus Breach | Follow the worked incident with the stages open.','Skills Assessment | Treat it like an exam scenario and keep a timeline.']},
+
+ {phase:'Process and SIEM', id:'siem', name:'Security Monitoring & SIEM Fundamentals', diff:'Easy', slug:'security-monitoring--siem-fundamentals',
+  why:'The exam lives in a SIEM. This is where you learn to query it and to decide whether an alert is real.',
+  learn:['What a SIEM does: collect, normalise, correlate, alert','The Elastic stack and how to search in Kibana','SOC tiers and MITRE ATT&CK as shared language','Building use cases and triaging alerts'],
+  practice:['Rebuild each of the four visualisations yourself instead of only reading them','Write your own triage checklist: true or false positive, severity, scope, escalate','Spend one evening only in Kibana Discover practising field filters'],
+  can:['Write a query for failed logons by user','Explain true vs false positive and what makes you escalate','Map a technique to an ATT&CK tactic'],
+  sec:['SIEM Definition & Fundamentals | Collection, normalisation, correlation, alerting.','Introduction To The Elastic Stack | Elasticsearch, Logstash, Kibana. Get comfortable in Discover.','SOC Definition & Fundamentals | Tiers, roles and how alerts flow.','MITRE ATT&CK & Security Operations | Tactics vs techniques; use it as a map.','SIEM Use Case Development | From a threat to a detection rule.','SIEM Visualization Example 1: Failed Logon Attempts (All Users) | Event 4625 and how to chart it.','SIEM Visualization Example 2: Failed Logon Attempts (Disabled Users) | Why a disabled account logging in matters.','SIEM Visualization Example 3: Successful RDP Logon Related To Service Accounts | Logon type 10 and service accounts.','SIEM Visualization Example 4: Users Added Or Removed From A Local Group (Within A Specific Timeframe) | Group change events, time filters.','The Triaging Process | Decide, document, escalate.','Skills Assessment | Practise your queries under time pressure.']},
+
+ {phase:'Windows logs and hunting', id:'wel', name:'Windows Event Logs & Finding Evil', diff:'Medium', slug:'windows-event-logs--finding-evil',
+  why:'Short but central. Sysmon and event IDs are the vocabulary of the exam. Do the Unit42 Sherlock right after this.',
+  learn:['Windows event log structure and the IDs that matter','Sysmon events and how to read them','Event Tracing for Windows (ETW)','Querying with Get-WinEvent'],
+  practice:['Install Sysmon in a VM, run a few commands, and find them in Event Viewer','Write down the Sysmon IDs 1, 3, 7, 10, 11, 13, 22 and what each logs','Retry the Unit42 Sherlock'],
+  can:['Pull events by ID with Get-WinEvent -FilterHashtable','Explain why Sysmon 10 on lsass.exe is suspicious','Say what ETW gives you that event logs do not'],
+  sec:['Windows Event Logs | Channels, IDs, structure of an event.','Analyzing Evil With Sysmon & Event Logs | Spot DLL hijacking and credential dumping.','Event Tracing for Windows (ETW) | Providers, sessions, consumers.','Tapping Into ETW | Reading what logs miss.','Get-WinEvent | The PowerShell query you will use in the exam.','Skills Assessment | Find evil in a real log set.']},
+
+ {phase:'Windows logs and hunting', id:'hunt', name:'Introduction to Threat Hunting & Hunting With Elastic', diff:'Medium', slug:'introduction-to-threat-hunting--hunting-with-elastic',
+  why:'Teaches you to start from a hypothesis and walk an intrusion in Elastic, which is the same motion the exam asks for.',
+  learn:['The threat hunting process and glossary','Threat intelligence basics','A full hunt for a phishing-led intrusion in Elastic'],
+  practice:['Write one hunt hypothesis in your own words and the query that would test it','Keep a running timeline while you do Hunting For Stuxbot'],
+  can:['Explain hunting vs alerting','Pivot from one indicator to the next in the SIEM'],
+  sec:['Threat Hunting Fundamentals | Hunting vs alert-driven work.','The Threat Hunting Process | Hypothesis, test, pivot, document.','Threat Hunting Glossary | Terms the exam will use.','Threat Intelligence Fundamentals | IOCs, TTPs, how CTI feeds hunts.','Hunting For Stuxbot | A full scenario. Build a timeline as you go.','Skills Assessment | A new hunt, no hand-holding.']},
+
+ {phase:'Splunk and Windows attacks', id:'splog', name:'Understanding Log Sources & Investigating with Splunk', diff:'Medium', slug:'understanding-log-sources--investigating-with-splunk',
+  why:'Your Splunk foundation. Learn SPL here before Detecting Windows Attacks with Splunk, which assumes you can already search.',
+  learn:['Splunk and SPL basics','Using Splunk apps','Intrusion detection scenarios by TTP and by analytics'],
+  practice:['Install Splunk Enterprise (free trial) and load a BOTS dataset','Write ten SPL searches: stats, table, rex, eval, sort, dedup'],
+  can:['Count events by field with stats count by','Extract a field with rex','Explain index vs sourcetype'],
+  sec:['Introduction To Splunk & SPL | Searches, fields, pipes.','Using Splunk Applications | Apps and add-ons.','Intrusion Detection With Splunk (Real-world Scenario) | An end-to-end investigation.','Detecting Attacker Behavior With Splunk Based On TTPs | Rules built on technique knowledge.','Detecting Attacker Behavior With Splunk Based On Analytics | Statistical and baseline approaches.','Skills Assessment | Time yourself.']},
+
+ {phase:'Splunk and Windows attacks', id:'waad', name:'Windows Attacks & Defense', diff:'Medium', slug:'windows-attacks--defense',
+  why:'The attacks you will be hunting. Do the attack and the detection notes for each section; the exam is full of these.',
+  learn:['Kerberoasting, AS-REProasting, DCSync, Golden Ticket','GPP passwords, credentials in shares and object properties','Delegation attacks, NTLM relaying and coercion','ACL abuse and PKI (ESC1), plus how each one is defended'],
+  practice:['For each section write attack, event IDs and one mitigation on a single card','Keep a table of attack, tool, and the log you would check'],
+  can:['Name the event IDs for Kerberoasting (4769) and DCSync (4662)','Explain why a Golden Ticket survives a password reset','Say which attacks need a domain account and which do not'],
+  sec:['Introduction and Terminology | Vocabulary, attacker mindset.','Overview and Lab Environment | Set up and orient yourself.','Kerberoasting | Service tickets, weak passwords. Event 4769.','AS-REProasting | No pre-auth accounts.','GPP Passwords | Old SYSVOL passwords.','GPO Permissions/GPO Files | Writable GPOs.','Credentials in Shares | Loot from file shares.','Credentials in Object Properties | Passwords in descriptions.','DCSync | Replication rights abused.','Golden Ticket | Forged TGT from krbtgt.','Kerberos Constrained Delegation | S4U abuse.','Print Spooler & NTLM Relaying | Coerce and relay.','Coercing Attacks & Unconstrained Delegation | Capture TGTs.','Object ACLs | GenericAll, WriteDACL and friends.','PKI - ESC1 | Certificate template abuse.','Skills Assessment | Attack and defend in one run.']},
+
+ {phase:'Splunk and Windows attacks', id:'dwas', name:'Detecting Windows Attacks with Splunk', diff:'Medium', slug:'detecting-windows-attacks-with-splunk',
+  why:'The longest module (23 sections) and very close to what the exam asks: find the attack in the logs. Easier straight after Windows Attacks & Defense.',
+  learn:['Detection logic for recon, spraying, relay, roasting, pass-the-hash/ticket and DCSync','Detections for RDP and Kerberos brute force, beaconing, scans and exfiltration','Zerologon, ransomware and Cobalt Strike PsExec traces','Building your own Splunk app'],
+  practice:['Save every query that works in a notes file with the attack name above it','After each section, say out loud what the attacker did and what log gave it away'],
+  can:['Write a detection for password spraying','Spot beaconing by interval','Explain how pass-the-hash differs from pass-the-ticket in logs'],
+  sec:['Detecting Common User/Domain Recon | Net commands, AD enumeration.','Detecting Password Spraying | Many users, few passwords. 4625 patterns.','Detecting Responder-like Attacks | LLMNR and NBT-NS poisoning.','Detecting Kerberoasting/AS-REProasting | Ticket encryption types.','Detecting Pass-the-Hash | NTLM logons with odd source.','Detecting Pass-the-Ticket | Ticket reuse and anomalies.','Detecting Overpass-the-Hash | NTLM hash to Kerberos ticket.','Detecting Golden Tickets/Silver Tickets | Forged ticket traces.','Detecting Unconstrained Delegation/Constrained Delegation Attacks | Delegation settings and use.','Detecting DCSync/DCShadow | Replication from non-DCs.','Creating Custom Splunk Applications | Package your work.','Detecting RDP Brute Force Attacks | 4625 type 10 volumes.','Detecting Beaconing Malware | Regular intervals in network logs.','Detecting Nmap Port Scanning | Many ports, one source.','Detecting Kerberos Brute Force Attacks | Pre-auth failures.','Detecting Kerberoasting | A second angle on 4769.','Detecting Golden Tickets | Another look with different data.','Detecting Cobalt Strike\'s PSExec | Service creation and named pipes.','Detecting Zerologon | Netlogon anomalies.','Detecting Exfiltration (HTTP) | Large outbound transfers.','Detecting Exfiltration (DNS) | Long or frequent DNS queries.','Detecting Ransomware | Mass file changes and shadow copy deletion.','Skills Assessment | Run it like an exam scenario.']},
+
+ {phase:'Network analysis', id:'nta1', name:'Intro to Network Traffic Analysis', diff:'Medium', slug:'intro-to-network-traffic-analysis',
+  why:'Packets are evidence. This is where you get fast with tcpdump and Wireshark, which you will reuse in every later network module.',
+  learn:['The analysis process and a networking refresher','tcpdump capture and filters','Wireshark display filters, following streams and decryption'],
+  practice:['Capture your own browsing and answer: which DNS server, which TLS version, which user agent','Build a list of ten display filters you actually use'],
+  can:['Filter by host, port and protocol in both tcpdump and Wireshark','Follow a TCP stream and extract a file','Say how you would decrypt RDP traffic'],
+  sec:['Network Traffic Analysis | What and why.','Networking Primer - Layers 1-4 | Quick refresh.','Networking Primer - Layers 5-7 | Application protocols.','The Analysis Process | A method, not random clicking.','Analysis in Practice | The method on real traffic.','Tcpdump Fundamentals | Syntax and flags.','Capturing With Tcpdump (Fundamentals Labs) | Practice.','Tcpdump Packet Filtering | BPF filters.','Interrogating Network Traffic With Capture and Display Filters | Filter fluency.','Analysis with Wireshark | The interface.','Familiarity With Wireshark | Build muscle memory.','Wireshark Advanced Usage | Statistics, streams, export.','Packet Inception, Dissecting Network Traffic With Wireshark | Deeper dissection.','Guided Lab: Traffic Analysis Workflow | Do the whole workflow.','Decrypting RDP connections | Keys and capture.']},
+
+ {phase:'Network analysis', id:'nta2', name:'Intermediate Network Traffic Analysis', diff:'Easy', slug:'intermediate-network-traffic-analysis',
+  why:'Teaches what attacks look like on the wire. Each section is one pattern worth memorising.',
+  learn:['ARP, fragmentation, spoofing and TTL tricks','TCP handshake abnormalities, resets and hijacking','ICMP tunnelling, strange HTTP headers, XSS, SSL renegotiation','Peculiar DNS, Telnet and UDP traffic'],
+  practice:['Make a one-line "what it looks like" note for each attack','Keep the Wireshark filter next to each note'],
+  can:['Spot ARP spoofing from duplicate MAC replies','Recognise a SYN flood','Tell normal DNS from tunnelling'],
+  sec:['Intermediate Network Traffic Analysis Overview | Plan of attack.','ARP Spoofing & Abnormality Detection | Duplicate IP-to-MAC claims.','ARP Scanning & Denial-of-Service | Sweeps and floods.','802.11 Denial-of-Service | Deauth frames.','Rogue Access Point & Evil-Twin Attacks | Copied SSIDs.','Fragmentation Attacks | Overlapping and tiny fragments.','IP Source & Destination Spoofing Attacks | Mismatched addresses.','IP Time-to-Live Attacks | Odd TTL patterns.','TCP Handshake Abnormalities | Missing or malformed steps.','TCP Connection Resets & Hijacking | RST patterns.','ICMP Tunneling | Data hidden in pings.','HTTP/HTTPs Service Enumeration Detection | Scanner behaviour.','Strange HTTP Headers | Odd User-Agents and injections.','Cross-Site Scripting (XSS) & Code Injection Detection | Payloads in requests.','SSL Renegotiation Attacks | Repeated renegotiation.','Peculiar DNS Traffic | Tunnelling and long queries.','Strange Telnet & UDP Connections | Unexpected plaintext and UDP.','Skills Assessment | Find the attack.']},
+
+ {phase:'Network analysis', id:'ids', name:'Working with IDS/IPS', diff:'Medium', slug:'working-with-idsips',
+  why:'Detection engineering for the network. Reading and writing a rule teaches you what a rule can and cannot catch.',
+  learn:['Suricata fundamentals and rule development','Snort fundamentals and rule development','Zeek fundamentals and intrusion detection with Zeek'],
+  practice:['Write one rule for each tool that fires on a simple HTTP request, then test it with a PCAP','Compare the same PCAP in all three tools'],
+  can:['Read a Suricata rule header and options','Explain what Zeek logs give you that an IDS alert does not'],
+  sec:['Introduction To IDS/IPS | IDS vs IPS, host vs network.','Suricata Fundamentals | Config, logs and EVE.','Suricata Rule Development Part 1 | Header and options.','Suricata Rule Development Part 2 (Encrypted Traffic) | JA3 and TLS metadata.','Snort Fundamentals | Setup and modes.','Snort Rule Development | Rule structure.','Zeek Fundamentals | Logs and scripts.','Intrusion Detection With Zeek | Hunting in Zeek logs.','Skills Assessment - Suricata | Write and test rules.','Skills Assessment - Snort | Same for Snort.','Skills Assessment - Zeek | Hunt in logs.']},
+
+ {phase:'Malware and detection rules', id:'mal', name:'Introduction to Malware Analysis', diff:'Hard', slug:'introduction-to-malware-analysis',
+  why:'The hardest module. You only need triage-level analysis for the exam; do not try to become a reverse engineer here.',
+  learn:['Windows internals relevant to malware','Static analysis on Linux and Windows','Dynamic analysis and basic code analysis','Debugging and writing detection rules'],
+  practice:['Always work inside a VM with snapshots and no network at first','Write down each indicator you find: hashes, strings, registry keys, domains'],
+  can:['Hash a file and look it up','Read the strings of an unknown binary','Say what a sandbox run tells you'],
+  sec:['Introduction To Malware & Malware Analysis | Types and goals.','Windows Internals | Processes, PE files, DLLs.','Static Analysis On Linux | Strings, file, hashes.','Static Analysis On Windows | PE tools.','Dynamic Analysis | Run it safely and watch.','Code Analysis | Reading disassembly at a high level.','Debugging | Stepping through code.','Creating Detection Rules | Turn findings into YARA.','Skills Assessment | Triage an unknown sample.']},
+
+ {phase:'Malware and detection rules', id:'jsd', name:'JavaScript Deobfuscation', diff:'Easy', slug:'javascript-deobfuscation',
+  why:'Phishing and web payloads often hide in obfuscated JS. This one is short and practical.',
+  learn:['How obfuscation works (minify, pack, encode)','Beautifying and deobfuscating scripts','Following the HTTP requests a script makes'],
+  practice:['Take any minified file, beautify it and rename three variables to meaningful names'],
+  can:['Spot base64 and hex in a script','Explain what a packer does'],
+  sec:['Introduction','Source Code','Code Obfuscation','Basic Obfuscation','Advanced Obfuscation','Deobfuscation','Code Analysis','HTTP Requests','Decoding','Skills Assessment','Summary']},
+
+ {phase:'Malware and detection rules', id:'ys', name:'YARA & Sigma for SOC Analysts', diff:'Easy', slug:'yara--sigma-for-soc-analysts',
+  why:'Detection rules you can write on exam day. Sigma in particular turns up again with Chainsaw and Splunk.',
+  learn:['Writing and testing YARA rules','Using YARA on Windows, Linux and web content','Sigma rules and converting them for Chainsaw and Splunk'],
+  practice:['Write a YARA rule for a file you analysed earlier','Convert one Sigma rule to a Splunk search by hand'],
+  can:['Explain the structure of a YARA rule','Read a Sigma rule and say what it detects'],
+  sec:['Introduction to YARA & Sigma | Why rules.','YARA and YARA Rules | Syntax.','Developing YARA Rules | Strings and conditions.','Hunting Evil with YARA (Windows Edition) | Files and memory.','Hunting Evil with YARA (Linux Edition) | Same on Linux.','Hunting Evil with YARA (Web Edition) | Web content.','Sigma and Sigma Rules | Generic rule format.','Developing Sigma Rules | Write your own.','Hunting Evil with Sigma (Chainsaw Edition) | Hunt EVTX files.','Hunting Evil with Sigma (Splunk Edition) | Convert and run.','Skills Assessment | Write rules from scratch.']},
+
+ {phase:'Forensics and reporting', id:'dfir', name:'Introduction to Digital Forensics', diff:'Medium', slug:'introduction-to-digital-forensics',
+  why:'Closest to what the exam is. A full investigation with evidence acquisition, memory and disk work.',
+  learn:['Windows forensic artefacts and evidence acquisition','Memory and disk forensics','Triage tools and a full practical scenario'],
+  practice:['Do the scenario twice: once guided, once with only your notes','Keep an evidence log with source, hash and what you found'],
+  can:['Say what to collect first and why (order of volatility)','Name three Windows artefacts of execution'],
+  sec:['Introduction to Digital Forensics | Goals and principles.','Windows Forensics Overview | Key artefacts.','Evidence Acquisition Techniques & Tools | Collect without altering.','Memory Forensics | Processes, connections, injected code.','Disk Forensics | Timelines, deleted files.','Rapid Triage Examination & Analysis Tools | Quick wins at scale.','Practical Digital Forensics Scenario | The big hands-on piece.','Skills Assessment | Treat it as a mock exam.']},
+
+ {phase:'Forensics and reporting', id:'rep', name:'Security Incident Reporting', diff:'Easy', slug:'security-incident-reporting',
+  why:'The report is graded. Five short sections that tell you exactly what a good one contains.',
+  learn:['The reporting process and what belongs in a report','How to write for technical and non-technical readers','A real-world report to compare against'],
+  practice:['Write a mock report for one Sherlock using the same headings','Start your report template now and reuse it'],
+  can:['Write an executive summary in five lines','Explain the difference between a finding and a recommendation'],
+  sec:['Introduction to Security Incident Reporting | Why reports matter.','The Incident Reporting Process | From notes to report.','Elements of a Proper Incident Report | The headings to use.','Communications | Who needs to know what.','Real-world Incident Report | Study a full example.']}
+];
+
+/* ---------- content: practice, exam, jobs ---------- */
+var ACADEMY = 'https://academy.hackthebox.com/course/preview/';
+var LABS = [
+ {name:'Sherlocks', blurb:'Short blue-team investigations on HTB Labs. Good for building your own method. Write each one up.', items:[
+  {id:'unit42', name:'Unit42', note:'Very easy and built on Sysmon logs. Try it after Windows Event Logs & Finding Evil.'},
+  {id:'brutus', name:'Brutus'}, {id:'meerkat', name:'Meerkat'}, {id:'loggy', name:'Loggy'}, {id:'ufo1', name:'UFO-1'}, {id:'noxious', name:'Noxious'}
+ ]},
+ {name:'SIEM practice', blurb:'Get fast in Splunk and Elastic. The exam lives in a SIEM.', items:[
+  {id:'bots', name:'Boss of the SOC (BOTS) datasets', note:'Free Splunk datasets. Splunk Enterprise is free for 60 days, so install it right before you start.', link:'https://github.com/splunk/botsv3'},
+  {id:'xintra', name:'Xintra labs free trial', note:'Reported as a 7-day trial with two labs on Elastic. Start it after SIEM Fundamentals and block a few evenings.'}
+ ]},
+ {name:'Official prep and reading', blurb:'', items:[
+  {id:'prep', name:'CDSA Preparation track', kind:'count', total:11, label:'scenarios', note:'11 scenarios on HTB Labs, very easy to hard. Check the exact access terms on HTB.', link:'https://roadmap.hackthebox.com/changelog/htb-certified-defensive-security-analyst-cdsa-preparation-track'},
+  {id:'dfirr', name:'The DFIR Report case studies', kind:'count', total:5, label:'reports read', note:'Read real intrusion reports and note how each one is structured. Aim for five.', link:'https://thedfirreport.com'}
+ ]}
+];
+
+var RESOURCES = [
+ {id:'r-path', name:'SOC Analyst job-role path', host:'academy.hackthebox.com', url:'https://academy.hackthebox.com/path/preview/soc-analyst', desc:'The 15 modules you need at 100% before the exam.', type:'Official'},
+ {id:'r-prep', name:'CDSA Preparation track announcement', host:'roadmap.hackthebox.com', url:'https://roadmap.hackthebox.com/changelog/htb-certified-defensive-security-analyst-cdsa-preparation-track', desc:'The 11 prep scenarios on HTB Labs.', type:'Official'},
+ {id:'r-sysmon', name:'Sysmon documentation', host:'learn.microsoft.com', url:'https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon', desc:'Every Sysmon event ID in one place.', type:'Reference'},
+ {id:'r-uws', name:'Windows Security Log Encyclopedia', host:'ultimatewindowssecurity.com', url:'https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/', desc:'Look up any Windows event ID and its fields.', type:'Reference'},
+ {id:'r-attack', name:'MITRE ATT&CK', host:'attack.mitre.org', url:'https://attack.mitre.org/', desc:'Look up any technique and how it is detected.', type:'Reference'},
+ {id:'r-spl', name:'Splunk SPL reference', host:'docs.splunk.com', url:'https://docs.splunk.com/Documentation/Splunk/latest/SearchReference/WhatsInThisManual', desc:'Search command reference.', type:'Reference'},
+ {id:'r-kql', name:'Kibana Query Language (KQL)', host:'elastic.co', url:'https://www.elastic.co/guide/en/kibana/current/kuery-query.html', desc:'Syntax for Discover.', type:'Reference'},
+ {id:'r-wsdoc', name:'Wireshark documentation', host:'wireshark.org', url:'https://www.wireshark.org/docs/', desc:'User guide and display filter reference.', type:'Reference'},
+ {id:'r-suri', name:'Suricata documentation', host:'docs.suricata.io', url:'https://docs.suricata.io/', desc:'Rule format and configuration.', type:'Reference'},
+ {id:'r-zeek', name:'Zeek documentation', host:'docs.zeek.org', url:'https://docs.zeek.org/', desc:'Log formats and scripting.', type:'Reference'},
+ {id:'r-yara', name:'YARA documentation', host:'yara.readthedocs.io', url:'https://yara.readthedocs.io/', desc:'Rule syntax and modules.', type:'Reference'},
+ {id:'r-sigma', name:'SigmaHQ rules', host:'github.com', url:'https://github.com/SigmaHQ/sigma', desc:'Thousands of community detection rules to read.', type:'GitHub'},
+ {id:'r-chainsaw', name:'Chainsaw', host:'github.com', url:'https://github.com/WithSecureLabs/chainsaw', desc:'Hunt through Windows event logs with Sigma rules (used in the YARA & Sigma module).', type:'Tool'},
+ {id:'r-hayabusa', name:'Hayabusa', host:'github.com', url:'https://github.com/Yamato-Security/hayabusa', desc:'Fast Windows event log timeline and threat hunting tool.', type:'Tool'},
+ {id:'r-ez', name:'Eric Zimmerman tools', host:'ericzimmerman.github.io', url:'https://ericzimmerman.github.io/', desc:'Free forensic artefact parsers used by many analysts.', type:'Tool'},
+ {id:'r-vol', name:'Volatility 3', host:'github.com', url:'https://github.com/volatilityfoundation/volatility3', desc:'Memory forensics framework.', type:'Tool'},
+ {id:'r-cyber', name:'CyberChef', host:'gchq.github.io', url:'https://gchq.github.io/CyberChef/', desc:'Decode and transform data: base64, XOR, hex and more.', type:'Tool'},
+ {id:'r-vt', name:'VirusTotal', host:'virustotal.com', url:'https://www.virustotal.com/', desc:'Check hashes, files, domains and IPs.', type:'Tool'},
+ {id:'r-splunk', name:'Splunk Enterprise download', host:'splunk.com', url:'https://www.splunk.com/en_us/download/splunk-enterprise.html', desc:'Free trial for your own practice instance.', type:'Tool'},
+ {id:'r-evtx', name:'EVTX-ATTACK-SAMPLES', host:'github.com', url:'https://github.com/sbousseaden/EVTX-ATTACK-SAMPLES', desc:'Real attack logs to practise on offline.', type:'Dataset'},
+ {id:'r-bots', name:'Boss of the SOC v3 dataset', host:'github.com', url:'https://github.com/splunk/botsv3', desc:'Free Splunk practice data.', type:'Dataset'},
+ {id:'r-atomic', name:'Atomic Red Team', host:'github.com', url:'https://github.com/redcanaryco/atomic-red-team', desc:'Small attack tests: run one, then find it in your logs.', type:'GitHub'},
+ {id:'r-dfir', name:'The DFIR Report', host:'thedfirreport.com', url:'https://thedfirreport.com', desc:'Real intrusion write-ups with timelines.', type:'Reading'},
+ {id:'r-obs', name:'Obsidian', host:'obsidian.md', url:'https://obsidian.md', desc:'Notes app for your cheat sheets and exam notes (Windows and Mac).', type:'Tool'}
+];
+var RES_TYPES = ['All','Official','Reference','Tool','Dataset','GitHub','Reading'];
+var REVIEW_DAYS = [1,3,7,14,30];
+
+var GATE = [
+ {k:'path', t:'SOC Analyst path is at 100% (HTB requires it before you can sit the exam)', auto:true},
+ {k:'hints', t:'I can finish the preparation scenarios without hints'},
+ {k:'mock', t:'I have written at least one complete mock report'},
+ {k:'notes', t:'My notes and cheat sheets work offline and I can find things fast'},
+ {k:'tmpl', t:'My report template and timeline format are ready'},
+ {k:'voucher', t:'Voucher bought and seven days blocked on my calendar'},
+ {k:'plan', t:'I will write the report while I investigate, not after'}
+];
+
+var EXAM_FACTS = [
+ ['7 days','to complete the exam'],
+ ['2 attempts','per voucher'],
+ ['20 MB','report size limit (PDF or ZIP)'],
+ ['~20 days','typical wait for results']
+];
+var EXAM_NOTES = [
+ 'Two parts: the lab (you need a minimum number of points, which HTB does not publish) and then a graded report.',
+ 'You must complete 100% of the SOC Analyst path before you can sit the exam.',
+ 'The report is submitted unencrypted as a PDF or ZIP.',
+ 'Prices change. At the time of research a voucher was about $210 and the Silver Annual plan about $490 with one voucher included, but check HTB before you buy.'
+];
+
+var EVENTS = [
+ ['A process started by an odd parent, like cmd.exe from notepad.exe','Sysmon 1, Security 4688','Parent and child, command line, user, hash'],
+ ['Many failed logons, then a success','Security 4625, then 4624','Source IP, logon type, which account'],
+ ['Something touching lsass.exe','Sysmon 10','Calling process and access mask. Possible credential dumping'],
+ ['A new service appears','System 7045, Security 4697','Service name, binary path, account'],
+ ['Event log cleared','Security 1102, System 104','Who cleared it, and what happened just before'],
+ ['Lots of service ticket requests','Security 4769','Possible Kerberoasting: requesting account, encryption type'],
+ ['Outbound connection from an unusual process','Sysmon 3, DNS in Sysmon 22','Destination, port, process, then the lookup that came first'],
+ ['New persistence','Sysmon 11 and 13, Security 4698','File path, Run keys, scheduled tasks']
+];
+
+var TIMELINE_TPL = 'Time (UTC) | Host | Source | What happened | Evidence | ATT&CK\n2025-01-01 09:14 | WS-01 | Sysmon 1 | winword.exe spawned powershell.exe | Event record ID, command line | T1059.001\n';
+var REPORT_TPL = '# Incident report\n\n## 1. Executive summary\nThree to five lines: what happened, impact, current status.\n\n## 2. Scope and sources\nHosts, accounts and log sources reviewed.\n\n## 3. Timeline\nUTC times, one line per event, each with evidence.\n\n## 4. Findings\nOne subsection per question: answer first, then the evidence.\n\n## 5. Indicators of compromise\nHashes, IPs, domains, file paths, accounts.\n\n## 6. Recommendations\nContainment, eradication, recovery and detection improvements.\n';
+var FOLDER_TPL = '00-Inbox/\n01-Modules/\n  Basics/\n  SOC-Analyst/\n02-Cheatsheets/\n  Windows-event-IDs.md\n  Sysmon-events.md\n  SPL-and-KQL-queries.md\n  Wireshark-filters.md\n03-Sherlocks-and-labs/\n04-Report-template/\n05-Exam/\n  timeline.md\n  findings.md\n  report-draft.md\n';
+
+
+/* ---------- content: what to practise after each module ----------
+   Gathered from HTB's own pages and from write-ups by people who passed the CDSA, plus public lab catalogues.
+   Entry: [name, source, level, what it trains, priority ('core' = do it, 'extra' = if you have time), optional url] */
+var SRC = {
+  htb:   {n:'HTB Sherlocks', u:'https://app.hackthebox.com/sherlocks'},
+  cyd:   {n:'CyberDefenders', u:'https://cyberdefenders.org/blueteam-ctf-challenges/'},
+  bots:  {n:'Splunk BOTS', u:'https://github.com/splunk/botsv1'},
+  mta:   {n:'Malware-Traffic-Analysis', u:'https://malware-traffic-analysis.net/training-exercises.html'},
+  dfirr: {n:'The DFIR Report', u:'https://thedfirreport.com'},
+  evtx:  {n:'EVTX samples', u:'https://github.com/sbousseaden/EVTX-ATTACK-SAMPLES'},
+  rep:   {n:'Report practice', u:'https://docs.sysreptor.com/htb-reporting-with-sysreptor'},
+  drill: {n:'Drill', u:''}
+};
+var PROBLEMS = {
+ net:[
+  ['Subnet ten random networks by hand','drill','Basic','Range, mask and broadcast without a calculator.','core'],
+  ['Capture your own browsing in Wireshark','drill','Basic','Find the DNS query, the TCP three-way handshake and the TLS hello. Annotate each packet in your notes.','core'],
+  ['Write a one-page port cheat sheet','drill','Basic','53 DNS, 88 Kerberos, 389/636 LDAP, 445 SMB, 3389 RDP, 5985/5986 WinRM. You will reuse it all path.','core']],
+ winf:[
+  ['List what is normal on a clean Windows VM','drill','Basic','Processes and their parents, services, scheduled tasks. Knowing normal is how you spot evil.','core'],
+  ['Find three persistence locations in the registry','drill','Basic','Run and RunOnce keys, services, scheduled tasks. Note what a legitimate entry looks like.','core'],
+  ['Find a logon event in Event Viewer','drill','Basic','Locate a 4624, read the logon type and account fields.','core']],
+ wcl:[
+  ['Pull failed logons with Get-WinEvent','drill','Basic','Use -FilterHashtable for event ID 4625 in the last 24 hours. This is a direct exam skill.','core'],
+  ['List auto-start services that are not from Microsoft','drill','Basic','Practise filtering with Where-Object and Select-Object.','core'],
+  ['Decode a base64 PowerShell command','drill','Basic','Take any -EncodedCommand string and decode it in PowerShell or CyberChef.','extra']],
+ ad:[
+  ['Draw a small forest with two domains','drill','Basic','Mark domain controllers, OUs and where Domain Admins live.','core'],
+  ['Write the Kerberos steps from memory','drill','Basic','AS-REQ, TGT, TGS-REQ, service ticket. Compare with the module afterwards.','core'],
+  ['Build a tiny AD lab in a VM','drill','Basic','One domain controller and one client. Create users, a group and a GPO, then read the logs it produces.','extra']],
+ web:[['Read raw HTTP with curl -v','drill','Basic','Find a 301, a 403 and a 500 and explain each one.','core']],
+ nmap:[['Compare -sS and -sT in a capture','drill','Basic','Scan your own VM while capturing in Wireshark and note which packets reveal the scan type.','core']],
+ ptp:[['Map each pentest stage to the Kill Chain and ATT&CK','drill','Basic','One line per stage: what the attacker does and what you would see in logs.','core']],
+ lin:[
+  ['Find a failed SSH login in the logs','drill','Basic','Search /var/log/auth.log or journalctl with grep, then count the top source IPs.','core'],
+  ['Brutus','htb','Very Easy','Linux auth.log and wtmp evidence of an SSH brute force. A good first Linux investigation.','extra']],
+ bash:[['Count failed logins per IP with a script','drill','Basic','Loop over a log file and print the top offenders.','core']],
+ asm:[['Step through a tiny binary in GDB','drill','Basic','Single-step the first ten instructions and name each register change.','core']],
+
+ ih:[
+  ['Read one full DFIR Report case','dfirr','Reading','Label every event with a Kill Chain stage and note what you would have detected, contained and fixed.','core'],
+  ['Write a one-page playbook for a ransomware alert','drill','Basic','Preparation, detection, containment, eradication, recovery and lessons learned, in your own words.','extra']],
+ siem:[
+  ['REvil - GOLD SOUTHFIELD','cyd','Easy','Investigate ransomware behaviour in Sysmon logs inside an Elastic SIEM, the same tool as this module.','core'],
+  ['Rebuild the four SIEM visualisations yourself','drill','Basic','Failed logons, disabled users, RDP by service accounts, local group changes. Do not just read them.','core'],
+  ['Write your own triage checklist','drill','Basic','True or false positive, severity, scope, escalate. You will reuse it in the exam.','extra']],
+ wel:[
+  ['Unit42','htb','Very Easy','Sysmon logs and a backdoored tool used for persistence. Your first Windows log investigation.','core'],
+  ['LogJammer','htb','Easy','Windows event logs: firewall rule changes, audit policy changes, scheduled tasks and cleared logs.','core'],
+  ['Name the technique in five EVTX samples before reading the label','evtx','Practice','Open attack logs offline and say what happened before checking the answer.','extra']],
+ hunt:[
+  ['GoldenSpray','cyd','Medium','Elastic and Sysmon: build an intrusion timeline and name the attacker techniques.','core'],
+  ['ElasticCase','cyd','Medium','A simulated multi-stage attack to hunt through in Elastic SIEM.','extra'],
+  ['BumbleBee - GOLD CABIN','cyd','Medium','Trace an attack from initial access to ransomware using ELK, Windows event logs and Sysmon.','extra']],
+ splog:[
+  ['Splunk BOTS v1: first 15 questions','bots','Medium','The standard Splunk investigation dataset. Do it without reading write-ups. Install Splunk Enterprise only when you start (free trial is limited).','core'],
+  ['Ten SPL searches from scratch','drill','Basic','stats, table, rex, eval, sort, dedup, timechart. Save each query in your notes.','core'],
+  ['T1197','cyd','Medium','Find BITS and LOLBAS abuse and persistence in Windows logs with Splunk.','extra']],
+ waad:[
+  ['Campfire-1','htb','Very Easy','Kerberoasting traced through Active Directory logs in Elastic.','core'],
+  ['Campfire-2','htb','Very Easy','AS-REP roasting investigated through ELK. Pairs with the previous one.','core'],
+  ['Attack and detection cards','drill','Basic','One card per attack: the technique, the tool, the event IDs, one mitigation.','core']],
+ dwas:[
+  ['Kerberoasted','cyd','Medium','Detect and respond to Kerberoasting, find compromised accounts and persistence in Kerberos logs.','core'],
+  ['Splunk BOTS v1: the rest','bots','Medium','Finish the dataset. The exam rewards fast, confident SIEM searching.','core'],
+  ['Midnight RDP','cyd','Hard','Reconstruct an intrusion that began with RDP access: persistence, privilege escalation and C2, all in Splunk.','extra'],
+  ['Rhysida - Vice Society','cyd','Medium','Rebuild a ransomware attack chain in Splunk.','extra']],
+ nta1:[
+  ['Three newest Malware-Traffic-Analysis exercises','mta','Practice','Packet captures with a question: what is the infection chain and what malware is it? The site advises starting with the most recent ones.','core'],
+  ['PacketDetective','cyd','Easy','Extract indicators of compromise from a PCAP with only Wireshark.','core'],
+  ['Noxious','htb','Very Easy','A network capture investigation in Wireshark. Redo it after the module.','core']],
+ nta2:[
+  ['Litter','htb','Easy','Protocol analysis in Wireshark, decoding values with CyberChef and spotting a DNS tunnelling tool.','core'],
+  ['Unit 42 Wireshark quizzes','mta','Practice','Short quiz-style captures with separate answer pages, linked from the same site.','core']],
+ ids:[
+  ['Meerkat','htb','Easy','PCAP plus Suricata and Zeek logs: tell credential stuffing from other brute force and research the exploited CVE.','core'],
+  ['Write a Suricata rule for a capture','drill','Basic','Pick an exercise PCAP, write a rule that fires on one behaviour, then test it.','core'],
+  ['WebStrike','cyd','Beginner','A web server compromise across initial access, execution, persistence, C2 and exfiltration.','extra']],
+ mal:[
+  ['RogueOne','htb','Easy','Memory forensics to find a malicious process, its C2 activity and network connections.','core'],
+  ['Triage an unknown sample','drill','Basic','Hash it, read its strings, look it up in VirusTotal and write down every indicator.','core'],
+  ['ReliableThreat','htb','Medium','A malicious VS Code extension leading to a reverse shell, plus COM hijacking for persistence.','extra'],
+  ['Amadey','cyd','Easy','Endpoint forensics on a malware infection.','extra']],
+ jsd:[
+  ['Bumblebee','htb','Easy','Analyse malicious JavaScript that steals credentials, plus SQLite forensics and LDAP.','core'],
+  ['Deobfuscate a minified script','drill','Basic','Beautify it, rename three variables, and write down what it does.','core']],
+ ys:[
+  ['Run Chainsaw with Sigma rules on EVTX samples','evtx','Practice','See which Sigma rules fire on real attack logs, then open the log to confirm.','core'],
+  ['Write a YARA rule for a sample you analysed','drill','Basic','Strings plus a condition. Test it against a clean file to check for false positives.','core'],
+  ['Read ten Sigma rules from SigmaHQ','drill','Reading','Say what each one detects and which log source it needs.','extra']],
+ dfir:[
+  ['Recollection','htb','Easy','Memory forensics on a Windows image, including obfuscated PowerShell.','core'],
+  ['Trojan','htb','Easy','Volatility 3 analysis of a malicious ZIP and a compromised workstation.','core'],
+  ['Tracer','htb','Easy','PsExec lateral movement, Prefetch, service binaries and named pipes.','core'],
+  ['Jinkies','htb','Medium','Triage artefacts: shares, process logs, registry, with an OSINT element.','extra'],
+  ['Heartbreaker','htb','Medium','A medium DFIR investigation, recommended by people who passed.','extra'],
+  ['APTNightmare','htb','Medium','Another medium DFIR case from the same recommendations.','extra']],
+ rep:[
+  ['Write a mock report for Unit42','rep','Report','Use the HTB CDSA template in SysReptor, with a timeline, evidence per finding and remediation advice.','core'],
+  ['Write a second mock report for a Medium lab','rep','Report','Pick a Medium Sherlock and time yourself. Practise writing as you investigate.','core'],
+  ['Compare against the sample CDSA report','rep','Reading','Read the sample report PDF and list what yours is missing.','core','https://docs.sysreptor.com/assets/reports/HTB-CDSA-Report.pdf']]
+};
+var FINAL_PROBLEMS = [
+  ['CDSA Preparation track: all 11 scenarios','htb','Very Easy to Hard','Redo every scenario where you needed hints, until you can finish without them. HTB suggests this is the readiness bar.','core','https://roadmap.hackthebox.com/changelog/htb-certified-defensive-security-analyst-cdsa-preparation-track'],
+  ['Splunk BOTS v1 from start to finish, no write-ups','bots','Medium','A full SIEM investigation under your own steam.','core'],
+  ['Timed mock exam: one Medium Sherlock, 48 hours, full report','rep','Mock','Build the timeline from minute one, screenshot as you go, and write the report during the investigation.','core'],
+  ['Hafnium APT','cyd','Hard','Reconstruct initial access, persistence and lateral movement from Elastic, Sysmon and Windows logs.','extra'],
+  ['Detroit Becomes Human','htb','Hard','Malware delivered through a social media link, with event log and PowerShell analysis.','extra'],
+  ['Exam environment check','drill','Basic','Confirm VPN, notes app, screenshot tool and report template all work before you book.','core']
+];
+var PASSER_TIPS = [
+  ['Write the report as you investigate. Treat it as half the exam from day one, and paste the evidence and one sentence of explanation after each confirmed finding.','CertCrush'],
+  ['Explore the exam environment first to find your tools and evidence. Start with the first incident to build momentum; wrong flag answers carry no penalty.','Nullpoint'],
+  ['Build a timeline from the first minute so you do not repeat steps, and save every query next to its screenshot.','Nullpoint, HTB interview'],
+  ['Document your assumptions in the report wherever the evidence has a gap. Not every step of an incident can be proven.','Nullpoint'],
+  ['Practise a Sherlock and write a mock report on it well before the exam.','HTB interview with a first-blood winner'],
+  ['Sherlocks have far less evidence than the exam and no time limit by default, so add your own time limit.','Reviews of the exam'],
+  ['Weak spots people named: threat hunting in Elastic, threat hunting in Splunk and memory analysis with Volatility.','Nullpoint'],
+  ['Do not speedrun the path. Build a cheat sheet per module: tool commands and SIEM queries.','HTB interview, passer reviews'],
+  ['If you are stuck for a long time, move on and come back with fresh eyes. Use all seven days.','HTB interview, passer reviews'],
+  ['The SysReptor template for the HTB CDSA report saved several people a lot of formatting time.','Passer reviews']
+];
+(function(){
+'use strict';
+/* ---------- model ---------- */
+var MODS=[];
+var TIERS={Core:'Do these first',Skim:'Skim for the vocabulary',Later:'Only if you have time'};
+STAGE0.forEach(function(m,i){m.stage=0;m.n=i+1;m.label='B'+(i+1);m.phase=TIERS[m.tier];MODS.push(m);});
+STAGE1.forEach(function(m,i){m.stage=1;m.n=i+1;m.label=String(i+1);MODS.push(m);});
+var BY={};
+MODS.forEach(function(m){
+  m.link=ACADEMY+m.slug;
+  m.secs=m.sec.map(function(s,i){var p=s.split(' | ');return {id:m.id+'.'+(i+1),n:i+1,t:p[0],h:p[1]||'',m:m};});
+  BY[m.id]=m;
+});
+var SEC={};MODS.forEach(function(m){m.secs.forEach(function(s){SEC[s.id]=s;});});
+var LS_KEY='cdsa-tracker-v4',LS_OLD='cdsa-tracker-v3';
+var EXT_PER=4; // sections per study day once past the target date
+
+/* ---------- state ---------- */
+function def(){return {v:4,done:{},flag:{},notes:{},skip:{},open:{},labs:{},cnt:{},gate:{},rev:{},revN:0,focus:{},badges:{},fav:{},dnotes:{},dopen:{},hideDone:false,start:'',target:80,exam:'',days:[1,2,3,4,5,6],theme:'dark',timer:null,celeb:true,sound:false,cel:{}};}
+var S=def(), memOnly=false;
+function isDate(x){return typeof x==='string'&&/^\d{4}-\d\d-\d\d$/.test(x);}
+function norm(d,old){
+  var s=def();
+  if(d&&typeof d==='object'){
+    ['done','flag','notes','skip','open','labs','cnt','gate','rev','focus','badges','fav','cel'].forEach(function(k){if(d[k]&&typeof d[k]==='object')s[k]=d[k];});
+    Object.keys(s.done).forEach(function(k){if(!SEC[k]||typeof s.done[k]!=='string')delete s.done[k];}); // unknown ids or odd values would break the planner
+    if(!old){['dnotes','dopen'].forEach(function(k){if(d[k]&&typeof d[k]==='object')s[k]=d[k];});}
+    if(isDate(d.start))s.start=d.start;
+    if(isDate(d.exam))s.exam=d.exam;
+    if(+d.target>=7)s.target=Math.min(400,Math.round(+d.target));
+    if(Array.isArray(d.days)&&d.days.length)s.days=d.days.filter(function(x){return x>=0&&x<=6;});
+    if(!s.days.length)s.days=[1,2,3,4,5,6];
+    if(+d.revN>0)s.revN=+d.revN;
+    s.hideDone=!!d.hideDone;
+    if(typeof d.celeb==='boolean')s.celeb=d.celeb;
+    if(typeof d.sound==='boolean')s.sound=d.sound;
+    if(d.theme==='light'||d.theme==='dark'||d.theme==='system')s.theme=d.theme;
+    if(d.timer&&+d.timer.end>0&&+d.timer.len>0)s.timer={end:+d.timer.end,len:+d.timer.len};
+  }
+  return s;
+}
+try{
+  var raw=localStorage.getItem(LS_KEY),old=false;
+  if(!raw){raw=localStorage.getItem(LS_OLD);old=!!raw;}
+  if(raw)S=norm(JSON.parse(raw),old);
+}catch(e){memOnly=true;}
+var saveT=null;
+function persist(){try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){memOnly=true;}}
+function save(){clearTimeout(saveT);saveT=setTimeout(persist,250);}
+window.addEventListener('pagehide',persist);
+
+/* ---------- helpers ---------- */
+function $(s,r){return (r||document).querySelector(s);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function pad(n){return String(n).padStart(2,'0');}
+function ymd(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function parse(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
+function addDays(d,n){return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);}
+function todayD(){var n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate());}
+function diffDays(a,b){return Math.round((a-b)/86400000);}
+function fmt(d){return d.toLocaleDateString(undefined,{day:'numeric',month:'short'});}
+function fmtL(d){return d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});}
+function fmtFull(d){return d.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});}
+function pct(x){return Math.round(Math.max(0,Math.min(1,x))*100);}
+function isStudy(d){return S.days.indexOf(d.getDay())>=0;}
+function weekStart(d){return addDays(d,-((d.getDay()+6)%7));}
+function fmtMin(m){m=Math.round(m);if(m<60)return m+'m';var h=Math.floor(m/60),r=m%60;return h+'h'+(r?' '+pad(r)+'m':'');}
+var ICON={
+  today:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  plan:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  path:'<svg viewBox="0 0 24 24"><path d="M4 6h3M4 12h3M4 18h3"/><path d="M11 6h9M11 12h9M11 18h9"/></svg>',
+  prac:'<svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5.5 9.5A2 2 0 0 0 6.2 21h11.6a2 2 0 0 0 1.7-2.5L14 9V3"/><path d="M7.5 15h9"/></svg>',
+  exam:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/></svg>',
+  flag:'<svg viewBox="0 0 24 24"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>',
+  chev:'<svg class="chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>',
+  ext:'<svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+  copy:'<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>',
+  star:'<svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>',
+  share:'<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.6M8.2 13.2l7.6 4.6"/></svg>'
+};
+
+/* ---------- numbers ---------- */
+function modStat(m){var d=0;m.secs.forEach(function(s){if(S.done[s.id])d++;});return {done:d,total:m.secs.length,pct:m.secs.length?d/m.secs.length:0,skipped:!!S.skip[m.id]};}
+function stageStat(stage){var d=0,t=0;MODS.forEach(function(m){if(m.stage!==stage||S.skip[m.id])return;var x=modStat(m);d+=x.done;t+=x.total;});return {done:d,total:t,pct:t?d/t:1};}
+function planList(){var out=[];MODS.forEach(function(m){if(S.skip[m.id])return;m.secs.forEach(function(s){out.push({m:m,s:s});});});return out;}
+function doneDates(){var c={};Object.keys(S.done).forEach(function(k){var v=S.done[k];if(isDate(v))c[v]=(c[v]||0)+1;});return c;}
+function activeOn(c,d){return (c[ymd(d)]||0)>0||(S.focus[ymd(d)]||0)>0;}
+function streakNow(c){
+  var d=todayD(),n=0,i=0;
+  for(;i<500;i++){
+    if(activeOn(c,d))n++;
+    else if(isStudy(d)&&i>0)break;
+    d=addDays(d,-1);
+  }
+  return n;
+}
+function bestStreak(c){
+  var keys=Object.keys(c).concat(Object.keys(S.focus)).sort();if(!keys.length)return 0;
+  var d=parse(keys[0]),end=todayD(),run=0,best=0;
+  while(d<=end){if(activeOn(c,d)){run++;if(run>best)best=run;}else if(isStudy(d)&&ymd(d)!==ymd(end))run=0;d=addDays(d,1);}
+  return best;
+}
+function sumDays(map,n){var d=todayD(),t=0;for(var i=0;i<n;i++){t+=map[ymd(addDays(d,-i))]||0;}return t;}
+function totalFocus(){var t=0;Object.keys(S.focus).forEach(function(k){t+=S.focus[k];});return t;}
+
+/* The planner: spreads what is left between today and the target date.
+   It is rebuilt on every render, so falling behind or getting ahead moves tomorrow's load by itself. */
+function engine(){
+  var t=todayD(),tk=ymd(t),start=S.start?parse(S.start):t;
+  var pl=planList(),rem=[],dTodayList=[],doneCount=0;
+  pl.forEach(function(x){var v=S.done[x.s.id];if(v){doneCount++;if(v===tk)dTodayList.push(x);}else rem.push(x);});
+  var deadline=S.exam?addDays(parse(S.exam),-7):addDays(start,Math.max(7,S.target)-1);
+  var first=t>start?t:start,slots=[],d=first,g=0;
+  while(d<=deadline&&g<1500){if(isStudy(d))slots.push(d);d=addDays(d,1);g++;}
+  var overdue=false;
+  if(rem.length&&!slots.length&&t>=start){
+    // past the target date: keep going at a fixed pace from today
+    overdue=true;d=t;g=0;var need=Math.ceil(rem.length/EXT_PER)+1;
+    while(slots.length<need&&g<4000){if(isStudy(d))slots.push(d);d=addDays(d,1);g++;}
+  }
+  var todayIsSlot=slots.length>0&&ymd(slots[0])===tk;
+  var R0=rem.length+(todayIsSlot?dTodayList.length:0),quota=0;
+  if(rem.length||dTodayList.length){quota=overdue?EXT_PER:(slots.length?Math.ceil(R0/slots.length):EXT_PER);}
+  var todayItems=[],after=rem;
+  if(todayIsSlot){var left=Math.max(0,quota-dTodayList.length);todayItems=rem.slice(0,left);after=rem.slice(left);}
+  var fs=todayIsSlot?slots.slice(1):slots.slice();
+  var days=[],modTarget={},secDate={};
+  todayItems.forEach(function(x){modTarget[x.m.id]=t;secDate[x.s.id]=t;});
+  if(after.length&&fs.length){
+    var idx=0;
+    if(overdue){fs.forEach(function(dt){if(idx<after.length){days.push({date:dt,items:after.slice(idx,idx+EXT_PER)});idx+=EXT_PER;}});}
+    else{var base=Math.floor(after.length/fs.length),extra=after.length%fs.length;fs.forEach(function(dt,k){var n=base+(k<extra?1:0);if(n>0){days.push({date:dt,items:after.slice(idx,idx+n)});idx+=n;}});}
+    days.forEach(function(dy){dy.items.forEach(function(x){modTarget[x.m.id]=dy.date;secDate[x.s.id]=dy.date;});});
+  }
+  var totalStudy=0,elapsed=0,dd2=start;g=0;
+  while(dd2<=deadline&&g<1500){if(isStudy(dd2)){totalStudy++;if(dd2<t)elapsed++;}dd2=addDays(dd2,1);g++;}
+  var ideal=totalStudy?Math.round(pl.length*elapsed/totalStudy):0;if(t<start)ideal=0;
+  var lastDate=days.length?days[days.length-1].date:(todayItems.length?t:null);
+  return {t:t,tk:tk,start:start,deadline:deadline,pl:pl,total:pl.length,done:doneCount,rem:rem,doneToday:dTodayList,todayItems:todayItems,quota:quota,todayIsSlot:todayIsSlot,days:days,modTarget:modTarget,secDate:secDate,overdue:overdue,ahead:doneCount-ideal,ideal:ideal,end:lastDate,slotsLeft:slots.length,dayNo:diffDays(t,start)+1,notStarted:t<start};
+}
+function history(E){
+  var c={};Object.keys(S.done).forEach(function(k){var v=S.done[k];if(isDate(v)&&v<E.tk){(c[v]=c[v]||[]).push({m:SEC[k].m,s:SEC[k]});}});
+  var out=[],d=E.start,g=0;
+  while(d<E.t&&g<1500){var k=ymd(d),items=c[k]||[];if(isStudy(d)||items.length)out.push({key:k,date:d,items:items,kind:'past',missed:items.length===0});d=addDays(d,1);g++;}
+  Object.keys(c).forEach(function(k){if(parse(k)<E.start&&!out.some(function(o){return o.key===k;}))out.unshift({key:k,date:parse(k),items:c[k],kind:'past',missed:false});});
+  out.sort(function(a,b){return a.key<b.key?-1:1;});
+  return out;
+}
+
+/* ---------- reviews, badges ---------- */
+function reviewsDue(){
+  var tk=ymd(todayD()),out=[];
+  Object.keys(S.rev).forEach(function(id){var r=S.rev[id];if(r.due<=tk&&SEC[id])out.push({id:id,r:r,s:SEC[id]});});
+  out.sort(function(a,b){return a.r.due<b.r.due?-1:a.r.due>b.r.due?1:0;});
+  return out;
+}
+var BADGES=[
+ ['first','First section',function(c){return c.done>=1;}],
+ ['s25','25 sections',function(c){return c.done>=25;}],
+ ['s100','100 sections',function(c){return c.done>=100;}],
+ ['s250','250 sections',function(c){return c.done>=250;}],
+ ['core','Core basics finished',function(c){return c.core;}],
+ ['p25','SOC path 25%',function(c){return c.soc>=.25;}],
+ ['p50','SOC path 50%',function(c){return c.soc>=.5;}],
+ ['p75','SOC path 75%',function(c){return c.soc>=.75;}],
+ ['p100','SOC path complete',function(c){return c.soc>=1;}],
+ ['str7','7-day streak',function(c){return c.best>=7;}],
+ ['str30','30-day streak',function(c){return c.best>=30;}],
+ ['h10','10 focused hours',function(c){return c.hours>=10;}],
+ ['h50','50 focused hours',function(c){return c.hours>=50;}],
+ ['rev25','25 reviews done',function(c){return S.revN>=25;}]
+];
+function badgeCtx(){
+  var c=doneDates(),core=true,any=false;
+  MODS.forEach(function(m){if(m.stage===0&&m.tier==='Core'&&!S.skip[m.id]){any=true;var x=modStat(m);if(x.done<x.total)core=false;}});
+  var dn=0;Object.keys(S.done).forEach(function(){dn++;});
+  return {done:dn,core:any&&core,soc:stageStat(1).pct*(stageStat(1).total?1:0),best:bestStreak(c),hours:totalFocus()/60};
+}
+function awardBadges(){
+  var c=badgeCtx(),fresh=[];
+  BADGES.forEach(function(b){if(!S.badges[b[0]]&&b[2](c)){S.badges[b[0]]=ymd(todayD());fresh.push({id:b[0],label:b[1]});}});
+  if(fresh.length)save();
+  return fresh;
+}
+
+/* ---------- rank and milestones ---------- */
+var STREAKS=[3,7,14,30];
+var RANKS=[[0,'Recruit'],[.15,'Analyst'],[.4,'Hunter'],[.7,'Responder'],[1,'CDSA-ready']];
+function socPct(){var s=stageStat(1);return s.total?s.done/s.total:0;}
+function rankIdx(p){var r=0;RANKS.forEach(function(x,i){if(p>=x[0])r=i;});return r;}
+function rankInfo(){var p=socPct(),i=rankIdx(p),nx=RANKS[i+1];return {p:p,i:i,name:RANKS[i][1],next:nx?nx[1]:'',nextAt:nx?nx[0]:1};}
+var SHIELD='M24 3 40 9.5V26c0 12-7.5 20-16 24C15.5 46 8 38 8 26V9.5z';
+function shield(p,uid,cls,label){
+  var y=(52*(1-Math.max(0,Math.min(1,p)))).toFixed(1);
+  return '<svg class="'+cls+'" viewBox="0 0 48 52"'+(label?' role="img" aria-label="'+esc(label)+'"':' aria-hidden="true"')+'><defs><clipPath id="'+uid+'"><rect x="0" y="'+y+'" width="48" height="52"/></clipPath></defs><path class="out" d="'+SHIELD+'"/><path class="fill" clip-path="url(#'+uid+')" d="'+SHIELD+'"/><path class="rim" d="'+SHIELD+'"/>'+(p>=1?'<path class="chk" d="m16 26 6 6 11-13"/>':'')+'</svg>';
+}
+/* Everything the user has earned so far. Keys in S.cel are milestones already celebrated (or sealed
+   silently on load/restore), so a milestone fires once, on a real action, and never replays. */
+function milestones(){
+  var out=[],E=engine(),sn=streakNow(doneDates());
+  MODS.forEach(function(m){var x=modStat(m);if(x.total&&x.done===x.total)out.push({key:'mod:'+m.id,type:'mod',label:m.name});});
+  [0,1].forEach(function(st){var s=stageStat(st);if(s.total&&s.done===s.total)out.push({key:'stage:'+st,type:'stage',stage:st,total:s.total});});
+  STREAKS.forEach(function(n){if(sn>=n)out.push({key:'streak:'+n,type:'streak',n:n});});
+  for(var i=1;i<=rankIdx(socPct());i++)out.push({key:'rank:'+RANKS[i][1],type:'rank',label:RANKS[i][1]});
+  if(E.todayIsSlot&&E.quota>0&&E.doneToday.length>=E.quota)out.push({key:'quota:'+E.tk,type:'quota'});
+  var s1=stageStat(1);
+  if(s1.total&&s1.done===s1.total&&GATE.every(function(g){return g.auto||S.gate[g.k];}))out.push({key:'ready',type:'ready'});
+  return out;
+}
+function newMilestones(){
+  var out=[];
+  milestones().forEach(function(m){if(!S.cel[m.key]){S.cel[m.key]=1;out.push(m);}});
+  if(out.length)save();
+  return out;
+}
+function sealCel(){
+  var old=ymd(addDays(todayD(),-45));
+  Object.keys(S.cel).forEach(function(k){if(k.indexOf('quota:')===0&&k.slice(6)<old)delete S.cel[k];});
+  milestones().forEach(function(m){S.cel[m.key]=1;});
+}
+
+/* ---------- celebrations ---------- */
+var RMQ=window.matchMedia?matchMedia('(prefers-reduced-motion: reduce)'):null;
+function reduced(){return !!(RMQ&&RMQ.matches);}
+var LOW=(navigator.hardwareConcurrency||8)<=4||(navigator.deviceMemory||8)<=2;
+var CAP=LOW?60:130,FXC=['#9FEF00','#5CB2FF','#FFAF00','#E8EEF8','#C6FF4D'];
+var PS=[],cv=null,cg=null,rafId=0,tPrev=0,tStart=0;
+function sizeCv(){if(!cv)return;var d=LOW?1:Math.min(2,window.devicePixelRatio||1);cv.width=Math.round(innerWidth*d);cv.height=Math.round(innerHeight*d);cg.setTransform(d,0,0,d,0,0);}
+function pStop(){cancelAnimationFrame(rafId);PS.length=0;if(cv){cv.remove();cv=null;cg=null;}}
+function pStart(){
+  if(cv)return;
+  cv=document.createElement('canvas');cv.className='fx-cv';cv.setAttribute('aria-hidden','true');document.body.appendChild(cv);
+  cg=cv.getContext('2d');sizeCv();tPrev=0;tStart=Date.now();rafId=requestAnimationFrame(pLoop);
+}
+function pLoop(ts){
+  var dt=tPrev?Math.min(.05,(ts-tPrev)/1000):.016;tPrev=ts;
+  cg.clearRect(0,0,innerWidth,innerHeight);
+  for(var i=PS.length-1;i>=0;i--){
+    var p=PS[i];p.age+=dt;var u=p.age-p.delay;
+    if(u<0)continue;
+    if(u>=p.life||p.y>innerHeight+40){PS.splice(i,1);continue;}
+    p.vy+=p.g*dt;p.vx*=p.drag;p.x+=p.vx*dt;p.y+=p.vy*dt;p.r+=p.vr*dt;
+    cg.save();cg.globalAlpha=u>p.life*.7?Math.max(0,1-(u-p.life*.7)/(p.life*.3)):1;cg.translate(p.x,p.y);cg.rotate(p.r);cg.fillStyle=p.c;
+    if(p.shape==='dot'){cg.beginPath();cg.arc(0,0,p.s*.35,0,6.283);cg.fill();}
+    else if(p.shape==='star'){var s=p.s*.6;cg.beginPath();cg.moveTo(0,-s);cg.quadraticCurveTo(0,0,s,0);cg.quadraticCurveTo(0,0,0,s);cg.quadraticCurveTo(0,0,-s,0);cg.quadraticCurveTo(0,0,0,-s);cg.fill();}
+    else{cg.scale(1,Math.cos(u*p.fl));cg.fillRect(-p.s/2,-p.s/3,p.s,p.s*.6);}
+    cg.restore();
+  }
+  if(!PS.length||Date.now()-tStart>4500){pStop();return;}
+  rafId=requestAnimationFrame(pLoop);
+}
+function pAdd(p){if(PS.length>=CAP)return;p.age=0;PS.push(p);}
+function mk(o){return {x:o.x,y:o.y,vx:o.vx,vy:o.vy,g:o.g,drag:o.drag||.985,r:Math.random()*6.28,vr:(Math.random()-.5)*14,s:o.s,c:FXC[Math.floor(Math.random()*FXC.length)],shape:o.shape,life:o.life,delay:o.delay||0,fl:4+Math.random()*6};}
+function burst(x,y,n,o){
+  o=o||{};if(reduced()||!S.celeb)return;
+  n=Math.min(n,CAP-PS.length);if(n<=0)return;pStart();
+  for(var i=0;i<n;i++){
+    var a=-Math.PI/2+(Math.random()-.5)*(o.spread||Math.PI*1.1),sp=(o.speed||420)*(.45+Math.random()*.65);
+    pAdd(mk({x:x,y:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,g:o.g||900,s:(o.size||9)*(.6+Math.random()*.7),shape:o.shape||(Math.random()<.25?'dot':'rect'),life:(o.life||1.1)+Math.random()*.5}));
+  }
+}
+function rain(n){ // full-width confetti, about two seconds
+  if(reduced()||!S.celeb)return;
+  n=Math.min(n,CAP-PS.length);if(n<=0)return;pStart();
+  for(var i=0;i<n;i++)pAdd(mk({x:Math.random()*innerWidth,y:-12-Math.random()*40,vx:(Math.random()-.5)*120,vy:140+Math.random()*220,g:260,drag:.99,s:7+Math.random()*6,shape:Math.random()<.2?'dot':'rect',life:1.6+Math.random()*.5,delay:Math.random()*.45}));
+}
+var AC=null;
+function tick(hi){ // one soft synthesized tick, only when Sound is switched on
+  if(!S.sound||!S.celeb)return;
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();
+    var t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();
+    o.type='sine';o.frequency.setValueAtTime(hi?988:740,t);o.frequency.exponentialRampToValueAtTime(hi?1318:988,t+.06);
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.05,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.14);
+    o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+.16);
+  }catch(e){}
+}
+window.addEventListener('resize',sizeCv);
+
+var MOD_MSG=['Module cleared. On to the next.','Another module down.','Clean sweep. That module is done.','Module complete. Nice pace.','Cleared. Breathe, then keep going.'];
+var QUOTA_MSG=['Today\'s quota cleared.','Daily target hit. Right on plan.','Quota done. Anything extra is a bonus.'];
+var lastMsg={};
+function varied(k,arr){var i,n=0;do{i=Math.floor(Math.random()*arr.length);n++;}while(arr.length>1&&i===lastMsg[k]&&n<9);lastMsg[k]=i;return arr[i];}
+function flash(el,cls,ms){if(!el)return;el.classList.add(cls);setTimeout(function(){el.classList.remove(cls);},ms);}
+function ctr(el){var r=el.getBoundingClientRect();return {x:Math.max(30,Math.min(innerWidth-30,r.left+r.width/2)),y:Math.max(40,Math.min(innerHeight-40,r.top+r.height/2))};}
+function ringP(){var E=engine(),dn=E.doneToday.length,q=Math.max(E.quota,dn);return q?Math.min(1,dn/q):(E.total?E.done/E.total:0);}
+function takeSnap(){var mp={};MODS.forEach(function(m){mp[m.id]=modStat(m).pct;});return {ring:ringP(),mp:mp};}
+
+/* Effects are queued by after() (user actions only) and played once the new DOM is on screen. */
+var FX=null,fxToast=false,achT=null;
+function after(o){
+  o=o||{};save();
+  if(o.defer)return;
+  var fresh=awardBadges(),ms=newMilestones();
+  if(o.silent)return;
+  var f=FX||(FX={ticks:[],ms:[],badges:[],snap:null,undo:null});
+  if(o.tick&&o.tick.on)f.ticks.push(o.tick);
+  f.ms=f.ms.concat(ms);f.badges=f.badges.concat(fresh);
+  if(o.snap&&!f.snap)f.snap=o.snap;
+  if(o.undo)f.undo=o.undo;
+}
+function bigOf(f){
+  var c=[],has={};
+  f.ms.forEach(function(m){
+    if(m.type==='ready')c.push({pri:100,eyebrow:'Milestone unlocked',title:'Ready to book',sub:'Every item on the readiness checklist is ticked. Book your voucher and block out the seven days.'});
+    else if(m.type==='stage'&&m.stage===1){has.p100=1;c.push({pri:90,eyebrow:'Stage complete',title:'SOC Analyst path complete',sub:'All '+m.total+' sections done. That clears the HTB requirement for the CDSA exam.'});}
+    else if(m.type==='stage')c.push({pri:80,eyebrow:'Stage complete',title:'Basics complete',sub:'All '+m.total+' sections of Stage 0 are done. On to the SOC Analyst path.'});
+    else if(m.type==='streak'){has['str'+m.n]=1;c.push({pri:70+m.n/100,eyebrow:'Streak milestone',title:m.n+'-day streak',sub:m.n+' study days in a row. Rest days do not break it.'});}
+  });
+  f.badges.forEach(function(b){if(!has[b.id])c.push({pri:60,eyebrow:'Badge unlocked',title:'New badge: '+b.label,sub:'It is now on your Milestones list on the Today page.'});});
+  if(!c.length)return null;
+  c.sort(function(a,b){return b.pri-a.pri;});
+  var top=c[0];top.also=c.slice(1).map(function(x){return x.title;});
+  return top;
+}
+function banner(b){
+  var el=$('#ach');if(!el)return;
+  el.innerHTML=shield(1,'achSh','shield ic','')+'<div class="tx"><span class="eyebrow">'+esc(b.eyebrow)+'</span><b>'+esc(b.title)+'</b><p>'+esc(b.sub)+'</p>'+(b.also&&b.also.length?'<p class="also">Also: '+esc(b.also.join(' · '))+'</p>':'')+'</div><button class="x" data-act="achClose" aria-label="Dismiss">Dismiss</button>';
+  el.classList.add('on');clearTimeout(achT);achT=setTimeout(function(){el.classList.remove('on');},7000);
+}
+function ringAnim(rb,from){
+  var c=rb.querySelectorAll('circle')[1];if(!c)return;
+  var tot=parseFloat(c.getAttribute('stroke-dasharray')),fin=c.getAttribute('stroke-dashoffset');
+  c.style.strokeDashoffset=(tot*(1-from)).toFixed(1);void c.getBoundingClientRect();c.style.strokeDashoffset=fin;
+}
+function playFx(){
+  var f=FX;FX=null;fxToast=false;if(!f)return;
+  if(!S.celeb){if(f.badges.length){toast('Milestone: '+f.badges[0].label,f.undo);fxToast=true;}return;}
+  var rm=reduced(),big=bigOf(f),anchor=null,mods=f.ms.filter(function(m){return m.type==='mod';});
+  f.ticks.forEach(function(t){
+    var cb=document.querySelector('input[data-act="'+(t.kind==='sec'?'sec':'lab')+'"][data-id="'+t.id+'"]');if(!cb)return;
+    anchor=anchor||cb;
+    var row=cb.closest('.sec,.dr,.crow');
+    if(rm){flash(cb,'hl',2200);flash(row,'hl',2200);}
+    else{flash(cb,'pop',700);flash(row,'glow',1200);if(t.kind==='prob'){var q=ctr(cb);burst(q.x,q.y,9,{shape:'star',spread:Math.PI*2,speed:150,g:80,size:8,life:.55});}}
+    tick(false);
+  });
+  if(f.snap&&!rm)Object.keys(f.snap.mp).forEach(function(id){
+    var now=modStat(BY[id]).pct,from=f.snap.mp[id];if(now===from)return;
+    var card=document.getElementById('m-'+id),bar=card&&card.querySelector('.mh .bar i');if(!bar)return;
+    bar.style.width=pct(from)+'%';void bar.offsetWidth;bar.style.width=pct(now)+'%';
+    if(now>=1&&from<1)bar.classList.add('shine');
+  });
+  mods.forEach(function(m){
+    var card=document.getElementById('m-'+m.key.slice(4));
+    if(rm){flash(card,'hl',2600);return;}
+    flash(card,'just',1100);
+    if(!big){var src=card?(card.querySelector('.mh .pr')||card):anchor;if(src){var q=ctr(src);burst(q.x,q.y,mods.length>1?30:64,{});}else burst(innerWidth/2,innerHeight*.35,64,{});}
+  });
+  var quota=f.ms.filter(function(m){return m.type==='quota';})[0],rb=$('.ringbox');
+  if(rb&&f.snap&&!rm)ringAnim(rb,f.snap.ring);
+  if(quota&&rb){
+    if(rm){flash(rb,'hl',2600);flash($('.hero'),'hl',2600);}
+    else{flash(rb,'pulse',1100);if(!big){var qc=ctr(rb);burst(qc.x,qc.y,44,{shape:'star',spread:Math.PI*2,speed:260,g:300,size:10,life:.9});}}
+  }
+  if(big){
+    banner(big);rain(LOW?55:90);if(!rm&&!LOW){burst(40,innerHeight-30,22,{spread:1,speed:620});burst(innerWidth-40,innerHeight-30,22,{spread:1,speed:620});}
+    tick(true);return;
+  }
+  var rank=f.ms.filter(function(m){return m.type==='rank';})[0],msg=null;
+  if(mods.length){msg=mods.length>1?mods.length+' modules cleared. Keep going.':varied('mod',MOD_MSG);}
+  else if(quota){msg=varied('quota',QUOTA_MSG);}
+  else if(rank){msg='Rank up: '+rank.label;}
+  if(msg){toast(msg,f.undo);fxToast=true;tick(true);}
+}
+function previewFx(){
+  if(!S.celeb){toast('Switch Celebrations on to preview them');return;}
+  banner({eyebrow:'Preview',title:'Celebrations are on',sub:'This is what a milestone looks like.',also:[]});
+  rain(LOW?55:90);tick(true);
+}
+
+/* ---------- ui state ---------- */
+var TABS=['today','plan','path','prac','exam'];
+var NAV=[['today','Today','today'],['plan','Plan','plan'],['path','Modules','path'],['prac','Practice','prac'],['exam','Exam','exam']];
+var tab=(function(){var h=(location.hash||'').replace('#','');if(h==='dash')h='today';return TABS.indexOf(h)>=0?h:'today';})();
+var F={filter:'all',q:'',rq:'',rt:'All',rfav:false,ptab:'road'};
+var toastT=null,undoFn=null,lastResetTap=0,lastDay=ymd(todayD());
+
+function ring(p,size,stroke,color){
+  var r=(size-stroke)/2,c=2*Math.PI*r,off=c*(1-Math.max(0,Math.min(1,p)));
+  return '<svg viewBox="0 0 '+size+' '+size+'"><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="var(--ring-track)" stroke-width="'+stroke+'"/><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+(color||'var(--accent)')+'" stroke-width="'+stroke+'" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" style="transition:stroke-dashoffset .5s ease"/></svg>';
+}
+function secRow(x,idp){
+  var on=!!S.done[x.s.id];
+  return '<div class="dr'+(on?' done':'')+'"><input class="cb" type="checkbox" id="'+idp+x.s.id+'" data-act="sec" data-id="'+x.s.id+'"'+(on?' checked':'')+' aria-label="'+esc(x.s.t)+'"><label for="'+idp+x.s.id+'"><b>'+esc(x.s.t)+'</b><small><span class="chip'+(x.m.stage===0?' cy':' acc')+'">'+x.m.label+'</span> '+esc(x.m.name)+' · '+x.s.n+'/'+x.m.secs.length+(x.s.h?' · '+esc(x.s.h):'')+'</small></label></div>';
+}
+
+/* ---------- Today ---------- */
+function viewToday(){
+  var E=engine(),c=doneDates(),h='';
+  var pctAll=E.total?E.done/E.total:0;
+  h+='<div class="top"><div><div class="eyebrow">'+esc(fmtFull(E.t))+'</div><h1>'+(E.notStarted?'Your plan starts '+fmt(E.start):'Day '+E.dayNo+' · Today')+'</h1></div><div class="chips"><span class="chip acc" title="Your rank follows how much of the SOC Analyst path is done">Rank · '+esc(rankInfo().name)+'</span><button class="btn sm" data-act="share">'+ICON.share+'Share progress</button></div></div>';
+
+  // mission
+  var items=E.doneToday.concat(E.todayItems),dn=E.doneToday.length,quota=Math.max(E.quota,dn);
+  var allDone=!E.rem.length&&!E.doneToday.length,restDay=!allDone&&!E.todayIsSlot&&!items.length,heroDone=allDone||(!restDay&&quota>0&&dn>=quota);
+  h+='<section class="hero'+(heroDone?' done':'')+'"><div style="min-width:0">';
+  if(!E.rem.length&&!E.doneToday.length){
+    h+='<div class="eyebrow">All sections done</div><h2>The whole plan is complete.</h2><p class="hint">Keep reviewing, then go through the readiness checklist on the Exam tab.</p><div class="acts"><button class="btn primary" data-act="tab" data-id="exam">Open Exam tab</button></div>';
+  }else if(!E.todayIsSlot&&!items.length){
+    var nx=E.rem[0];
+    h+='<div class="eyebrow">'+(E.notStarted?'Not started yet':E.overdue?'Past your target date':'Rest day')+'</div><h2>'+(E.overdue?'You are past the target date.':E.notStarted?'Starts on '+fmtL(E.start):'Nothing planned today.')+'</h2>'
+     +'<p class="hint">'+(E.overdue?'Pick a later finish in Plan or Settings. Meanwhile the plan keeps going at '+EXT_PER+' sections per study day.':'Optional: get ahead by one section.')+'</p>'
+     +(nx?'<div class="acts"><button class="btn primary" data-act="heroDone" data-id="'+nx.s.id+'">Do: '+esc(nx.s.t)+'</button><button class="btn" data-act="goto" data-id="'+nx.m.id+'">Open module</button></div>':'');
+  }else{
+    h+='<div class="eyebrow">'+(heroDone?'✓ Mission complete':'Today\'s mission')+'</div><h2>'+(heroDone?'Quota cleared. Nice work.':(quota-dn)+' more section'+((quota-dn)===1?'':'s')+' to stay on plan')+'</h2><p class="hint">'+dn+' of '+quota+' done. '+planLine(E)+'</p><div class="acts"><button class="btn" data-act="tab" data-id="plan">See the full plan</button></div>';
+  }
+  h+='</div><div class="ringbox">'+ring(quota?Math.min(1,dn/quota):pctAll,148,12)+'<div class="c"><b>'+(quota?dn+'/'+quota:pct(pctAll)+'%')+'</b><span>'+(quota?'today':'overall')+'</span></div></div></section>';
+  if(items.length){
+    h+='<section class="card"><h3>Today\'s sections</h3><div class="dlist">'+items.map(function(x){return secRow(x,'c-');}).join('')+'</div></section>';
+  }
+
+  // focus + review
+  h+='<div class="grid2">'+timerCard()+reviewCard()+'</div>';
+
+  // tiles
+  var st=streakNow(c),best=bestStreak(c),wkMin=sumDays(S.focus,7);
+  var paceMain=E.notStarted?'—':(E.ahead>=0?'+'+E.ahead:String(E.ahead));
+  h+='<div class="tiles"><div class="tile"><b>'+st+'<small style="font-size:14px;font-weight:600"> day'+(st===1?'':'s')+'</small></b><span>Streak <span class="chip acc" style="margin-left:6px">'+esc(rankInfo().name)+'</span></span><small>Best '+best+'. Rest days do not break it</small></div>'
+   +'<div class="tile"><b>'+fmtMin(S.focus[E.tk]||0)+'</b><span>Focused today</span><small>'+fmtMin(wkMin)+' in 7 days</small></div>'
+   +'<div class="tile"><b class="'+(E.ahead<0?'warnt':'good')+'">'+paceMain+'</b><span>Pace</span><small>sections '+(E.ahead<0?'behind':'ahead of')+' the ideal line</small></div>'
+   +'<div class="tile"><b style="font-size:20px;padding:3px 0">'+(E.end?fmt(E.end):(E.rem.length?'—':'Done'))+'</b><span>Forecast finish</span><small>Target '+fmt(E.deadline)+'</small></div></div>';
+
+  // stage progress
+  var s0=stageStat(0),s1=stageStat(1);
+  h+='<div class="grid2"><section class="card"><h3>Progress</h3><div class="stagebar"><div class="sb"><div class="l"><b>Stage 0 · Basics</b><span>'+s0.done+' / '+s0.total+'</span></div><div class="bar cy"><i style="width:'+pct(s0.pct)+'%"></i></div></div><div class="sb"><div class="l"><b>Stage 1 · SOC Analyst path</b><span>'+s1.done+' / '+s1.total+'</span></div><div class="bar"><i style="width:'+pct(s1.pct)+'%"></i></div></div>';
+  var phases=[];STAGE1.forEach(function(m){if(phases.indexOf(m.phase)<0)phases.push(m.phase);});
+  phases.forEach(function(p){var d=0,t=0;STAGE1.forEach(function(m){if(m.phase===p){var x=modStat(m);d+=x.done;t+=x.total;}});h+='<div class="sb"><div class="l"><span style="font-family:var(--f-body)">'+esc(p)+'</span><span>'+d+' / '+t+'</span></div><div class="bar" style="height:5px"><i style="width:'+pct(t?d/t:0)+'%"></i></div></div>';});
+  h+='</div><p class="note" style="margin-top:14px">HTB needs the SOC Analyst path at 100% before the CDSA exam. The basics are optional; skip modules you already know.</p></section>';
+
+  // last 7 days chart
+  var mx=1,bars=[];for(var i=6;i>=0;i--){var d=addDays(E.t,-i),n=c[ymd(d)]||0;if(n>mx)mx=n;bars.push({d:d,n:n,today:i===0,min:S.focus[ymd(d)]||0});}
+  h+='<section class="card"><h3>Last 7 days</h3><div class="wk">'+bars.map(function(b){return '<div class="wc'+(b.today?' td':'')+'"><span class="wn mono">'+b.n+'</span><div class="wb"><i style="height:'+(b.n?Math.max(6,Math.round(b.n/mx*100)):2)+'%"></i></div><span class="wd">'+b.d.toLocaleDateString(undefined,{weekday:'short'}).slice(0,3)+'</span><span class="wm mono">'+(b.min?fmtMin(b.min):'')+'</span></div>';}).join('')+'</div><p class="note" style="margin-top:12px">Sections finished per day, with focused time underneath.</p></section></div>';
+
+  // heatmap
+  var dow=E.t.getDay(),weeks=18,firstD=addDays(E.t,-(weeks-1)*7-dow),cells='';
+  for(var j=0;j<weeks*7;j++){var dd=addDays(firstD,j);if(dd>E.t){cells+='<i style="visibility:hidden"></i>';continue;}var n2=c[ymd(dd)]||0,lv=n2===0?'':n2<=2?'l1':n2<=4?'l2':n2<=7?'l3':'l4';cells+='<i class="'+lv+(ymd(dd)===E.tk?' today':'')+'" title="'+fmtL(dd)+': '+n2+' section'+(n2===1?'':'s')+'"></i>';}
+  h+='<section class="card"><h3>Activity, last '+weeks+' weeks</h3><div class="heatwrap"><div class="heat">'+cells+'</div></div></section>';
+
+  // badges
+  h+='<section class="card"><h3>Milestones</h3><div class="badges">'+BADGES.map(function(b){var on=S.badges[b[0]];return '<span class="bdg'+(on?' on':'')+'" title="'+(on?'Earned '+esc(on):'Locked')+'">'+(on?'✓ ':'')+esc(b[1])+'</span>';}).join('')+'</div></section>';
+  return h;
+}
+function planLine(E){
+  if(E.notStarted)return '';
+  if(E.overdue)return 'Past the target date.';
+  var left=E.rem.length;
+  return left+' section'+(left===1?'':'s')+' left, '+E.slotsLeft+' study day'+(E.slotsLeft===1?'':'s')+' until '+fmt(E.deadline)+'.';
+}
+function timerCard(){
+  var tk=ymd(todayD()),run=S.timer&&S.timer.end>Date.now();
+  var h='<section class="card"><h3>Focus timer</h3>';
+  if(run){h+='<div class="tm mono" id="tm">'+clockLeft()+'</div><p class="note" style="margin:6px 0 12px">Session running. It keeps going if you reload.</p><div class="row-btn"><button class="btn" data-act="timerStop">Stop and log elapsed time</button></div>';}
+  else{h+='<div class="tm mono" id="tm">'+fmtMin(S.focus[tk]||0)+'</div><p class="note" style="margin:6px 0 12px">focused today. Start a session, or log time you spent in a lab.</p><div class="row-btn"><button class="btn primary sm" data-act="timerStart" data-id="25">25 min</button><button class="btn sm" data-act="timerStart" data-id="50">50 min</button><button class="btn sm" data-act="timerStart" data-id="90">90 min</button><button class="btn sm ghost" data-act="logMin" data-id="15">+15m</button><button class="btn sm ghost" data-act="logMin" data-id="30">+30m</button></div>';}
+  return h+'</section>';
+}
+function clockLeft(){var ms=Math.max(0,S.timer.end-Date.now()),s=Math.ceil(ms/1000);return pad(Math.floor(s/60))+':'+pad(s%60);}
+function reviewCard(){
+  var due=reviewsDue(),h='<section class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><h3 style="margin:0">Review queue</h3><span class="chip '+(due.length?'am':'')+'">'+due.length+' due</span></div>';
+  if(!due.length){h+='<p class="note" style="margin-top:10px">Nothing to review right now. Each section you finish comes back after 1, 3, 7, 14 and 30 days so it sticks. Try to recall it before you check.</p></section>';return h;}
+  h+='<p class="note" style="margin:10px 0 4px">Say the key idea from memory, then check yourself.</p>';
+  due.slice(0,3).forEach(function(x){
+    h+='<div class="rv"><div class="rvn"><b>'+esc(x.s.t)+'</b><small>'+esc(x.s.m.name)+'</small>'+(x.s.h?'<details><summary>Show the key idea</summary><p>'+esc(x.s.h)+'</p></details>':'')+'</div><div class="rvb"><button class="btn sm primary" data-act="rev" data-id="'+x.id+'" data-v="1">Got it</button><button class="btn sm" data-act="rev" data-id="'+x.id+'" data-v="0">Forgot</button></div></div>';
+  });
+  if(due.length>3)h+='<p class="note" style="margin-top:8px">+'+(due.length-3)+' more after these.</p>';
+  return h+'</section>';
+}
+
+/* ---------- Plan ---------- */
+var PRESETS=[30,50,80,120,155];
+function dayCard(row,E){
+  var key=row.key,items=row.items,n=0;items.forEach(function(x){if(S.done[x.s.id])n++;});
+  var kind=row.kind,done=items.length>0&&n===items.length&&kind!=='future';
+  var open=S.dopen[key]!==undefined?!!S.dopen[key]:kind==='today';
+  var mods=[];items.forEach(function(x){if(mods.indexOf(x.m.name)<0)mods.push(x.m.name);});
+  var sub=mods.length?mods.join(', '):(row.missed?'No sections logged':'Rest');
+  var dayNo=diffDays(row.date,E.start)+1;
+  var h='<article class="day'+(done?' done':'')+(kind==='today'?' today':'')+(row.missed?' missed':'')+'" id="d-'+key+'"><button class="dh" data-act="dayToggle" data-id="'+key+'" aria-expanded="'+open+'"><span class="dn mono">'+(done?'✓':dayNo)+'</span><span class="t"><b>'+fmtL(row.date)+'</b><small>'+esc(sub)+'</small></span>'
+    +(kind==='today'?'<span class="chip acc">Today</span>':'')+(row.missed?'<span class="chip am">Missed</span>':'')
+    +'<span class="mono cnt">'+(kind==='future'?items.length+' to do':n+'/'+items.length)+'</span>'+ICON.chev+'</button>';
+  if(open){
+    h+='<div class="db">';
+    if(!items.length)h+='<p class="note" style="padding:10px 0">Nothing logged for this day.</p>';
+    items.forEach(function(x){h+=secRow(x,'c-');});
+    h+='<div class="dfoot"><textarea data-act="dnote" data-id="'+key+'" placeholder="Notes for this day: queries, event IDs, IoCs, things to revisit" aria-label="Notes for '+fmtL(row.date)+'">'+esc(S.dnotes[key]||'')+'</textarea>'
+      +(kind!=='past'&&items.length?'<button class="btn sm" data-act="dayAll" data-id="'+key+'">'+(done?'Clear this day':'Mark day done')+'</button>':'')+'</div></div>';
+  }
+  return h+'</article>';
+}
+function viewPlan(){
+  var E=engine();
+  var h='<div class="top"><div><div class="eyebrow">Adapts to you</div><h1>Day-by-day plan</h1><p>Your plan starts the day you first opened this page and re-plans every day from what is left. Fall behind and the next days get a bit heavier; get ahead and they lighten.</p></div></div>';
+  h+='<section class="card"><span class="note" style="display:block;margin-bottom:8px;font-weight:600">Finish the whole plan in</span><div class="pills">'
+    +PRESETS.map(function(T){var on=!S.exam&&S.target===T;return '<button class="pill" data-act="preset" data-id="'+T+'" aria-pressed="'+on+'">'+T+' days</button>';}).join('')
+    +'</div><p class="note" style="margin-top:12px">'+(S.exam?'Aiming to finish by '+fmtL(E.deadline)+', a week before your exam on '+fmtL(parse(S.exam))+'.':'Target finish: '+fmtL(E.deadline)+'.')+' Study days: '+S.days.slice().sort(function(a,b){return ((a+6)%7)-((b+6)%7);}).map(function(d){return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d];}).join(', ')+'. <button class="btn sm ghost" data-act="settings" style="display:inline-flex;min-height:0;padding:0 4px">Change in settings</button></p></section>';
+  var hist=history(E),rows=hist.slice();
+  var todayItems=E.doneToday.concat(E.todayItems);
+  if(E.todayIsSlot||todayItems.length)rows.push({key:E.tk,date:E.t,items:todayItems,kind:'today'});
+  E.days.forEach(function(d){rows.push({key:ymd(d.date),date:d.date,items:d.items,kind:'future'});});
+  var pastMiss=0;hist.forEach(function(r){if(r.missed)pastMiss++;});
+  h+='<div class="tiles"><div class="tile"><b>'+(E.notStarted?'—':'Day '+E.dayNo)+'</b><span>Today</span><small>of '+(diffDays(E.deadline,E.start)+1)+' to target</small></div>'
+    +'<div class="tile"><b>'+E.done+' / '+E.total+'</b><span>Sections done</span></div>'
+    +'<div class="tile"><b>'+E.quota+'</b><span>Per study day now</span><small>'+(E.ahead<0?'catching up':'on the current plan')+'</small></div>'
+    +'<div class="tile"><b style="font-size:20px;padding:3px 0">'+(E.end?fmt(E.end):'Done')+'</b><span>Forecast finish</span><small>'+pastMiss+' missed day'+(pastMiss===1?'':'s')+' so far</small></div></div>';
+  h+='<div class="tools"><button class="btn primary sm" data-act="jumpToday">Jump to today</button><button class="pill" data-act="hideDone" aria-pressed="'+S.hideDone+'">Hide past days</button><div class="pills" style="margin-left:auto"><button class="btn sm" data-act="dayExpand">Expand all</button><button class="btn sm" data-act="dayCollapse">Collapse all</button></div></div>';
+  var startWk=weekStart(E.start),cur=null,body='',head='',wc=0,shown=0;
+  function flush(){if(body){h+='<section class="weekgrp"><div class="wkh"><b>'+head+'</b><span class="mono">'+wc+' section'+(wc===1?'':'s')+'</span></div>'+body+'</section>';}body='';wc=0;}
+  rows.forEach(function(r){
+    if(S.hideDone&&r.kind==='past')return;
+    var ws=weekStart(r.date),k=ymd(ws);
+    if(k!==cur){flush();cur=k;head='Week '+(Math.floor(diffDays(ws,startWk)/7)+1)+' · '+fmt(ws)+' – '+fmt(addDays(ws,6));}
+    wc+=r.items.length;body+=dayCard(r,E);shown++;
+  });
+  flush();
+  if(!shown)h+='<div class="card empty">Nothing to show.</div>';
+  return h;
+}
+function scrollToday(){
+  var E=engine(),key=E.tk;
+  if(!document.getElementById('d-'+key))key=E.days.length?ymd(E.days[0].date):null;
+  var el=key?document.getElementById('d-'+key):null;
+  if(el)el.scrollIntoView({block:'start'});
+}
+
+/* ---------- Modules ---------- */
+function viewPath(){
+  var h='<div class="top"><div><div class="eyebrow">'+MODS.reduce(function(n,m){return n+m.secs.length;},0)+' sections · '+MODS.length+' modules</div><h1>Modules</h1><p>Basics first, then the 15 SOC Analyst modules in a sensible order. Tick each section as you finish it on Academy.</p></div></div>';
+  h+='<div class="tools"><input class="search" type="search" id="q" placeholder="Search modules and sections" value="'+esc(F.q)+'" aria-label="Search modules and sections"><div class="pills" id="pills">'
+    +[['all','All'],['doing','In progress'],['todo','Not started'],['done','Done'],['flag','Bookmarked']].map(function(p){return '<button class="pill" data-act="filter" data-id="'+p[0]+'" aria-pressed="'+(F.filter===p[0])+'">'+p[1]+'</button>';}).join('')
+    +'</div><div class="pills"><button class="btn sm" data-act="expandAll">Expand all</button><button class="btn sm" data-act="collapseAll">Collapse all</button></div></div>';
+  return h+'<div id="plist" class="wrap" style="gap:26px"></div>';
+}
+function matchMod(m){
+  var x=modStat(m),q=F.q.trim().toLowerCase();
+  if(F.filter==='doing'&&!(x.done>0&&x.done<x.total))return null;
+  if(F.filter==='todo'&&x.done!==0)return null;
+  if(F.filter==='done'&&x.done!==x.total)return null;
+  var secs=m.secs;
+  if(F.filter==='flag'){secs=secs.filter(function(s){return S.flag[s.id];});if(!secs.length)return null;}
+  if(q&&m.name.toLowerCase().indexOf(q)<0){secs=secs.filter(function(s){return s.t.toLowerCase().indexOf(q)>=0||s.h.toLowerCase().indexOf(q)>=0;});if(!secs.length)return null;}
+  return secs;
+}
+function modCard(m,secs,E){
+  var x=modStat(m),open=!!S.open[m.id]||(F.q.trim()&&secs.length<m.secs.length),tg=E.modTarget[m.id];
+  var h='<article class="mod'+(open?' open':'')+(x.done===x.total?' done':'')+(x.skipped?' skipped':'')+'" id="m-'+m.id+'">';
+  h+='<button class="mh" data-act="toggleMod" data-id="'+m.id+'" aria-expanded="'+(!!open)+'"><span class="idx">'+(x.done===x.total?'✓':m.label)+'</span><span class="t"><b>'+esc(m.name)+'</b><span class="meta"><span class="chip">'+m.diff+'</span>';
+  if(m.stage===0)h+='<span class="chip '+(m.tier==='Core'?'acc':m.tier==='Skim'?'cy':'am')+'">'+m.tier+'</span>';
+  if(x.skipped)h+='<span class="chip">Skipped</span>';else if(tg&&x.done<x.total)h+='<span class="chip">Forecast '+fmt(tg)+'</span>';
+  h+='</span></span><span class="pr"><span>'+x.done+'/'+x.total+'</span><span class="bar"><i style="width:'+pct(x.pct)+'%"></i></span></span>'+ICON.chev+'</button>';
+  if(open){
+    h+='<div class="mb"><div class="mb-top"><a class="btn sm primary" href="'+m.link+'" target="_blank" rel="noopener">Open on Academy '+ICON.ext+'</a><button class="btn sm" data-act="markAll" data-id="'+m.id+'">Mark all done</button><button class="btn sm" data-act="clearAll" data-id="'+m.id+'">Clear</button>'+(m.stage===0?'<button class="btn sm ghost" data-act="skip" data-id="'+m.id+'">'+(x.skipped?'Include in plan':'Skip this module')+'</button>':'')+'</div><div class="secs">';
+    secs.forEach(function(s){
+      var dn=S.done[s.id],fl=S.flag[s.id];
+      h+='<div class="sec'+(dn?' done':'')+'"><input class="cb" type="checkbox" id="m-c-'+s.id+'" data-act="sec" data-id="'+s.id+'"'+(dn?' checked':'')+' aria-label="'+esc(s.t)+'"><label class="tx" for="m-c-'+s.id+'"><b><span class="no">'+pad(s.n)+'</span>'+esc(s.t)+'</b>'+(s.h?'<small>'+esc(s.h)+'</small>':'')+'</label>'
+        +(isDate(dn)?'<span class="d">'+fmt(parse(dn))+'</span>':'')+'<button class="flag'+(fl?' on':'')+'" data-act="flag" data-id="'+s.id+'" aria-pressed="'+(!!fl)+'" title="Bookmark to revisit" aria-label="Bookmark to revisit">'+ICON.flag+'</button></div>';
+    });
+    h+='</div>'+probBlock(m)+'<div class="guide"><div><h4>Why it matters</h4><p>'+esc(m.why)+'</p></div><div><h4>What you will learn</h4><ul>'+m.learn.map(function(t){return '<li>'+esc(t)+'</li>';}).join('')+'</ul></div><div><h4>Practice alongside</h4><ul>'+m.practice.map(function(t){return '<li>'+esc(t)+'</li>';}).join('')+'</ul></div><div><h4>You are ready to move on when you can</h4><ul>'+m.can.map(function(t){return '<li>'+esc(t)+'</li>';}).join('')+'</ul></div><div class="note-box"><h4>My notes and where I got stuck</h4><textarea data-act="note" data-id="'+m.id+'" placeholder="Queries, event IDs, commands, things to revisit" aria-label="Notes for '+esc(m.name)+'">'+esc(S.notes[m.id]||'')+'</textarea></div></div></div>';
+  }
+  return h+'</article>';
+}
+function renderList(){
+  var el=$('#plist');if(!el)return;
+  var E=engine(),h='',any=false;
+  [0,1].forEach(function(stage){
+    var s=stageStat(stage),body='',lastPhase=null;
+    MODS.forEach(function(m){
+      if(m.stage!==stage)return;var secs=matchMod(m);if(!secs)return;
+      if(m.phase!==lastPhase){body+='<div class="phase">'+esc(m.phase)+'</div>';lastPhase=m.phase;}
+      body+=modCard(m,secs,E);any=true;
+    });
+    if(!body)return;
+    h+='<section class="stage"><div class="stage-h s'+stage+'"><span class="no">'+stage+'</span><div><h2>'+(stage===0?'Stage 0 · Basics':'Stage 1 · SOC Analyst path')+'</h2><p>'+(stage===0?'The Academy prerequisites path. Not required for the exam, but it makes everything after it easier.':'Required for the CDSA exam. Detecting Windows Attacks with Splunk sits right after Windows Attacks & Defense here; Academy lists it later.')+'</p></div><span class="r">'+s.done+' / '+s.total+'</span></div>'+body+'</section>';
+  });
+  el.innerHTML=any?h:'<div class="card empty">Nothing matches. Clear the search or pick another filter.</div>';
+}
+
+
+/* ---------- problems after each module ---------- */
+function probId(k,i){return 'p.'+k+'.'+i;}
+function probStat(m){var L=PROBLEMS[m.id]||[],d=0;L.forEach(function(p,i){if(S.labs[probId(m.id,i)])d++;});return {done:d,total:L.length};}
+function probRow(id,p){
+  var on=!!S.labs[id],src=SRC[p[1]]||SRC.drill,url=p[5]||'';
+  var lv=p[2]?'<span class="chip">'+esc(p[2])+'</span>':'';
+  var tag=p[4]==='core'?'<span class="chip acc">Do</span>':'<span class="chip">If time</span>';
+  var link=url?'<a class="btn sm" href="'+url+'" target="_blank" rel="noopener">Open '+ICON.ext+'</a>':(src.u?'<a class="btn sm" href="'+src.u+'" target="_blank" rel="noopener">'+esc(src.n)+' '+ICON.ext+'</a>':'');
+  return '<div class="crow prob'+(on?' done':'')+'"><label><input class="cb" type="checkbox" data-act="lab" data-id="'+id+'"'+(on?' checked':'')+'><span class="tx"><b>'+esc(p[0])+'</b><small>'+esc(p[3])+'</small><span class="meta">'+tag+(p[1]!=='drill'?'<span class="chip cy">'+esc(src.n)+'</span>':'<span class="chip">Drill</span>')+lv+'</span></span></label>'+link+'</div>';
+}
+function probBlock(m){
+  var L=PROBLEMS[m.id];if(!L||!L.length)return '';
+  var x=modStat(m),st=probStat(m),ready=x.done===x.total;
+  return '<div class="probs'+(ready?' ready':'')+'"><div class="probs-h"><h4>After this module, do these</h4><span class="mono">'+st.done+'/'+st.total+'</span></div><p class="note">'+(ready?'Module finished. Now prove it on real data.':'Do these once the sections above are done. Reading is not the same as being able to do it.')+'</p><div class="checks">'+L.map(function(p,i){return probRow(probId(m.id,i),p);}).join('')+'</div></div>';
+}
+function viewRoadmap(){
+  var tot=0,dn=0,h='';
+  MODS.forEach(function(m){var st=probStat(m);tot+=st.total;dn+=st.done;});
+  FINAL_PROBLEMS.forEach(function(p,i){tot++;if(S.labs[probId('final',i)])dn++;});
+  h+='<section class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><h3 style="margin:0">Problem roadmap</h3><span class="mono good">'+dn+' / '+tot+'</span></div><div class="bar" style="margin:12px 0 8px"><i style="width:'+pct(tot?dn/tot:0)+'%"></i></div><p class="note">What to do after finishing each module, in path order. Gathered from HTB, CyberDefenders, Splunk BOTS, malware-traffic-analysis.net and people who passed the exam. Check how current each item is before you rely on it: platforms rename labs and move them between free and paid.</p></section>';
+  [0,1].forEach(function(stage){
+    var body='';
+    MODS.forEach(function(m){
+      if(m.stage!==stage)return;var L=PROBLEMS[m.id];if(!L)return;var st=probStat(m);
+      body+='<details class="rm"'+(modStat(m).done===modStat(m).total&&st.done<st.total?' open':'')+'><summary><span class="idx">'+m.label+'</span><b>'+esc(m.name)+'</b><span class="mono">'+st.done+'/'+st.total+'</span></summary><div class="checks">'+L.map(function(p,i){return probRow(probId(m.id,i),p);}).join('')+'</div></details>';
+    });
+    h+='<section class="card"><h3>'+(stage===0?'Stage 0 · Basics drills':'Stage 1 · After each SOC module')+'</h3><div class="rmlist">'+body+'</div></section>';
+  });
+  var fb='';FINAL_PROBLEMS.forEach(function(p,i){fb+=probRow(probId('final',i),p);});
+  h+='<section class="card"><h3>Final stage · Exam rehearsal</h3><p class="note" style="margin:-6px 0 8px">Do this after the whole path. It is the closest you get to the real thing.</p><div class="checks">'+fb+'</div></section>';
+  h+='<section class="card"><h3>What people who passed said</h3><ul class="tips">'+PASSER_TIPS.map(function(t){return '<li>'+esc(t[0])+'<small>'+esc(t[1])+'</small></li>';}).join('')+'</ul></section>';
+  return h;
+}
+
+/* ---------- Practice ---------- */
+function resList(){
+  var q=F.rq.trim().toLowerCase();
+  var items=RESOURCES.filter(function(r){
+    if(F.rt!=='All'&&r.type!==F.rt)return false;
+    if(F.rfav&&!S.fav[r.id])return false;
+    if(q&&(r.name+' '+r.desc+' '+r.host+' '+r.type).toLowerCase().indexOf(q)<0)return false;
+    return true;
+  });
+  if(!items.length)return '<div class="empty">No resources match.</div>';
+  return items.map(function(r){
+    return '<div class="res"><button class="star'+(S.fav[r.id]?' on':'')+'" data-act="fav" data-id="'+r.id+'" aria-pressed="'+(!!S.fav[r.id])+'" aria-label="Favourite">'+ICON.star+'</button><a class="n" href="'+r.url+'" target="_blank" rel="noopener"><b>'+esc(r.name)+'</b><small>'+esc(r.desc)+'</small><em>'+esc(r.host)+'</em></a><span class="chip">'+r.type+'</span></div>';
+  }).join('');
+}
+function viewPractice(){
+  var h='<div class="top"><div><div class="eyebrow">Hands-on</div><h1>Practice</h1><p>Theory alone will not pass this exam. After each module, do the problems for it.</p></div></div>';
+  h+='<div class="pills" style="margin-bottom:14px"><button class="pill" data-act="ptab" data-id="road" aria-pressed="'+(F.ptab!=='lib')+'">Problem roadmap</button><button class="pill" data-act="ptab" data-id="lib" aria-pressed="'+(F.ptab==='lib')+'">Labs and resources</button></div>';
+  if(F.ptab!=='lib')return h+viewRoadmap();
+  LABS.forEach(function(g){
+    h+='<section class="card"><h3>'+esc(g.name)+'</h3>'+(g.blurb?'<p class="note" style="margin:-6px 0 8px">'+esc(g.blurb)+'</p>':'')+'<div class="checks">';
+    g.items.forEach(function(it){
+      if(it.kind==='count'){
+        var n=S.cnt[it.id]||0;
+        h+='<div class="crow'+(n>=it.total?' done':'')+'"><div class="tx" style="flex:1;min-width:0"><b>'+esc(it.name)+'</b>'+(it.note?'<small>'+esc(it.note)+'</small>':'')+(it.link?'<small><a href="'+it.link+'" target="_blank" rel="noopener">Open link</a></small>':'')+'</div><div class="count"><button class="btn sm" data-act="cnt" data-id="'+it.id+'" data-d="-1" aria-label="Decrease">−</button><b>'+n+'/'+it.total+'</b><button class="btn sm" data-act="cnt" data-id="'+it.id+'" data-d="1" aria-label="Increase">+</button></div></div>';
+      }else{
+        var on=!!S.labs[it.id];
+        h+='<div class="crow'+(on?' done':'')+'"><label><input class="cb" type="checkbox" data-act="lab" data-id="'+it.id+'"'+(on?' checked':'')+'><span class="tx"><b>'+esc(it.name)+'</b>'+(it.note?'<small>'+esc(it.note)+'</small>':'')+'</span></label>'+(it.link?'<a class="btn sm" href="'+it.link+'" target="_blank" rel="noopener">Open '+ICON.ext+'</a>':'')+'</div>';
+      }
+    });
+    h+='</div></section>';
+  });
+  h+='<section class="card"><h3>Resources</h3><div class="tools" style="margin-bottom:6px"><input class="search" type="search" id="rq" placeholder="Search resources" value="'+esc(F.rq)+'" aria-label="Search resources"><button class="pill" data-act="rfav" aria-pressed="'+F.rfav+'">Favourites only</button></div><div class="pills" id="rtypes" style="margin-bottom:6px">'
+    +RES_TYPES.map(function(t){return '<button class="pill" data-act="rtype" data-id="'+t+'" aria-pressed="'+(F.rt===t)+'">'+t+'</button>';}).join('')+'</div><div id="rlist">'+resList()+'</div></section>';
+  h+='<section class="card"><h3>Notes folder layout</h3><p class="note" style="margin:-6px 0 10px">A simple structure for Obsidian or any notes app that works on Windows and Mac.</p><div class="codebox"><pre>'+esc(FOLDER_TPL)+'</pre><button class="btn sm" data-act="copy" data-id="folder">'+ICON.copy+'Copy</button></div></section>';
+  return h;
+}
+
+/* ---------- Exam ---------- */
+function viewExam(){
+  var s1=stageStat(1),pathDone=s1.done===s1.total&&s1.total>0,n=0;
+  GATE.forEach(function(g){if(g.auto?pathDone:S.gate[g.k])n++;});
+  var h='<div class="top"><div><div class="eyebrow">CDSA</div><h1>Exam prep</h1><p>What you need to be ready, what the exam looks like, and the templates to have in place before day one.</p></div></div>';
+  h+='<section class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><h3 style="margin:0">Readiness</h3><span class="mono good">'+(n===GATE.length?'✓ Ready to book · ':'')+n+' / '+GATE.length+'</span></div><div class="bar" style="margin:12px 0 6px"><i style="width:'+pct(n/GATE.length)+'%"></i></div><div class="checks">';
+  GATE.forEach(function(g){
+    var on=g.auto?pathDone:!!S.gate[g.k];
+    h+='<div class="crow'+(on?' done':'')+'"><label><input class="cb" type="checkbox" '+(g.auto?'disabled ':'data-act="gate" data-id="'+g.k+'" ')+(on?'checked':'')+'><span class="tx"><b>'+esc(g.t)+'</b>'+(g.auto?'<small>Ticks itself when every SOC Analyst section is done ('+s1.done+' / '+s1.total+').</small>':'')+'</span></label></div>';
+  });
+  h+='</div></section>';
+  h+='<section class="card"><h3>Exam date</h3><div class="grid2" style="gap:14px"><label class="f">Date (optional)<input type="date" id="xDate" value="'+esc(S.exam)+'"></label><p class="note" style="align-self:end">'+(S.exam?'Your plan now aims to finish a week before this date. '+countdown(S.exam):'Set it once you have a date and the plan works backwards from it.')+'</p></div></section>';
+  h+='<div class="tiles">'+EXAM_FACTS.map(function(f){return '<div class="tile"><b>'+f[0]+'</b><span>'+f[1]+'</span></div>';}).join('')+'</div>';
+  h+='<section class="card"><h3>What to know about the exam</h3><ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px">'+EXAM_NOTES.map(function(t){return '<li>'+esc(t)+'</li>';}).join('')+'</ul></section>';
+  h+='<div class="grid2"><section class="card"><h3>Timeline template</h3><p class="note" style="margin:-6px 0 10px">Start it in the first minute and add a row for every finding.</p><div class="codebox"><pre>'+esc(TIMELINE_TPL)+'</pre><button class="btn sm" data-act="copy" data-id="timeline">'+ICON.copy+'Copy</button></div></section><section class="card"><h3>Report outline</h3><p class="note" style="margin:-6px 0 10px">The report decides the result. Write it while you investigate.</p><div class="codebox"><pre>'+esc(REPORT_TPL)+'</pre><button class="btn sm" data-act="copy" data-id="report">'+ICON.copy+'Copy</button></div></section></div>';
+  h+='<section class="card"><h3>If I see this, I check that</h3><div class="evs">'+EVENTS.map(function(e){return '<div class="ev"><b>'+esc(e[0])+'</b><span class="mono">'+esc(e[1])+'</span><small>'+esc(e[2])+'</small></div>';}).join('')+'</div></section>';
+  return h;
+}
+function countdown(d){var n=diffDays(parse(d),todayD());return n>0?n+' day'+(n===1?'':'s')+' to go.':n===0?'The exam is today.':'That date has passed.';}
+
+/* ---------- render ---------- */
+var TITLES={today:'Today',plan:'Day-by-day plan',path:'Modules',prac:'Practice',exam:'Exam prep'};
+function chrome(){
+  var nav='';NAV.forEach(function(n){nav+='<button data-act="tab" data-id="'+n[0]+'"'+(tab===n[0]?' aria-current="page"':'')+'>'+ICON[n[2]]+'<span>'+n[1]+'</span></button>';});
+  $('#nav').innerHTML=nav;$('#bnav').innerHTML=nav;
+  var s0=stageStat(0),s1=stageStat(1),ri=rankInfo(),stk=streakNow(doneDates()),sl='SOC path '+pct(ri.p)+'% complete';
+  $('#rankcard').innerHTML=shield(ri.p,'shS','shield',sl)+'<div class="rk"><span class="eyebrow">Rank</span><span class="nm">'+esc(ri.name)+'</span><small>Streak '+stk+' day'+(stk===1?'':'s')+'</small><small>'+(ri.next?'Next: '+esc(ri.next)+' at '+pct(ri.nextAt)+'% of SOC':'SOC path complete')+'</small></div>';
+  $('#mrank').innerHTML=shield(ri.p,'shM','shield',sl)+'<span class="nm">'+esc(ri.name)+'</span>';
+  $('#mini').innerHTML='<div class="row"><span>Basics</span><b>'+s0.done+'/'+s0.total+'</b></div><div class="bar cy" style="margin-bottom:10px"><i style="width:'+pct(s0.pct)+'%"></i></div><div class="row"><span>SOC Analyst</span><b>'+s1.done+'/'+s1.total+'</b></div><div class="bar"><i style="width:'+pct(s1.pct)+'%"></i></div>';
+}
+function render(){
+  var y=window.scrollY,ae=document.activeElement,fk=null;
+  if(ae&&ae.dataset&&ae.dataset.act&&ae.dataset.id&&ae.tagName!=='TEXTAREA'&&ae.type!=='search')fk=[ae.dataset.act,ae.dataset.id,ae.id];
+  var map={today:viewToday,plan:viewPlan,path:viewPath,prac:viewPractice,exam:viewExam};
+  $('#view').innerHTML=map[tab]();
+  if(tab==='path')renderList();
+  chrome();
+  document.title=TITLES[tab]+' · CDSA Study Tracker';
+  window.scrollTo(0,y);
+  if(fk){var e=fk[2]?document.getElementById(fk[2]):null;if(!e)e=document.querySelector('[data-act="'+fk[0]+'"][data-id="'+fk[1]+'"]');if(e)try{e.focus({preventScroll:true});}catch(x){}}
+  playFx();
+}
+function applyTheme(){var r=document.documentElement;if(S.theme==='light'||S.theme==='dark')r.setAttribute('data-theme',S.theme);else r.removeAttribute('data-theme');}
+
+/* ---------- actions ---------- */
+function toast(msg,undo){
+  var t=$('#toast');t.innerHTML='<span>'+esc(msg)+'</span>'+(undo?'<button data-act="undo">Undo</button>':'');
+  undoFn=undo||null;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on');undoFn=null;},undo?6000:2600);
+}
+function setSec(id,val){
+  if(val){S.done[id]=ymd(todayD());if(!S.rev[id])S.rev[id]={st:0,due:ymd(addDays(todayD(),REVIEW_DAYS[0]))};}
+  else{delete S.done[id];delete S.rev[id];}
+}
+function copyText(txt,label){
+  function fb(){var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand('copy');}catch(e){}ta.remove();toast(ok?label+' copied':'Select and copy manually');}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){toast(label+' copied');},fb);}else fb();
+}
+var TPL={folder:FOLDER_TPL,timeline:TIMELINE_TPL,report:REPORT_TPL};
+function go(t){tab=t;try{history.replaceState(null,'','#'+t);}catch(e){}render();window.scrollTo(0,0);if(t==='plan')setTimeout(scrollToday,0);}
+
+/* timer */
+var tmI=null;
+function startTick(){clearInterval(tmI);tmI=setInterval(function(){
+  var el=$('#tm');
+  if(S.timer){if(S.timer.end<=Date.now()){finishTimer(true,true);}else if(el)el.textContent=clockLeft();}
+},1000);}
+function addFocus(min){var k=ymd(todayD());S.focus[k]=(S.focus[k]||0)+min;}
+function finishTimer(complete,auto){
+  if(!S.timer)return;var len=S.timer.len,mins=complete?len:Math.max(0,Math.round((len*60000-Math.max(0,S.timer.end-Date.now()))/60000));
+  S.timer=null;if(mins>0)addFocus(mins);after({defer:!!auto});render();toast(complete?'Session done: '+len+' minutes logged':mins+' minutes logged');
+}
+
+function onAction(el){
+  var a=el.dataset.act,id=el.dataset.id;
+  switch(a){
+    case 'tab':go(id);break;
+    case 'goto':S.open[id]=1;F.filter='all';F.q='';tab='path';save();render();var t=document.getElementById('m-'+id);if(t)t.scrollIntoView({block:'start'});break;
+    case 'heroDone':{var sn=takeSnap(),undoHero=function(){setSec(id,false);save();render();};setSec(id,true);after({snap:sn,tick:{id:id,on:true,kind:'sec'},undo:undoHero});render();if(!fxToast)toast('Marked done',undoHero);break;}
+    case 'undo':if(undoFn){var f=undoFn;undoFn=null;f();$('#toast').classList.remove('on');}break;
+    case 'toggleMod':if(S.open[id])delete S.open[id];else S.open[id]=1;save();renderList();break;
+    case 'expandAll':MODS.forEach(function(m){S.open[m.id]=1;});save();renderList();break;
+    case 'collapseAll':S.open={};F.q='';var q=$('#q');if(q)q.value='';save();renderList();break;
+    case 'filter':F.filter=id;[].forEach.call(document.querySelectorAll('#pills .pill'),function(b){b.setAttribute('aria-pressed',b.dataset.id===id);});renderList();break;
+    case 'markAll':{var snM=takeSnap();BY[id].secs.forEach(function(s){if(!S.done[s.id])setSec(s.id,true);});after({snap:snM});render();break;}
+    case 'clearAll':BY[id].secs.forEach(function(s){setSec(s.id,false);});save();render();break;
+    case 'skip':if(S.skip[id])delete S.skip[id];else S.skip[id]=1;save();render();break;
+    case 'flag':if(S.flag[id])delete S.flag[id];else S.flag[id]=1;save();renderList();break;
+    case 'cnt':{var it=null;LABS.forEach(function(g){g.items.forEach(function(x){if(x.id===id)it=x;});});S.cnt[id]=Math.max(0,Math.min(it.total,(S.cnt[id]||0)+(+el.dataset.d)));save();render();break;}
+    case 'copy':copyText(TPL[id],'Template');break;
+    case 'preset':S.target=+id;S.exam='';save();render();break;
+    case 'hideDone':S.hideDone=!S.hideDone;save();render();break;
+    case 'dayToggle':{var E=engine();var def0=(id===E.tk);var cur=S.dopen[id]!==undefined?!!S.dopen[id]:def0;S.dopen[id]=!cur;save();render();break;}
+    case 'dayExpand':{var E1=engine(),r1=history(E1);r1.forEach(function(r){S.dopen[r.key]=true;});S.dopen[E1.tk]=true;E1.days.forEach(function(d){S.dopen[ymd(d.date)]=true;});save();render();break;}
+    case 'dayCollapse':{var E2=engine(),r2=history(E2);r2.forEach(function(r){S.dopen[r.key]=false;});S.dopen[E2.tk]=false;E2.days.forEach(function(d){S.dopen[ymd(d.date)]=false;});save();render();break;}
+    case 'dayAll':{var E3=engine(),items=null;
+      if(id===E3.tk)items=E3.doneToday.concat(E3.todayItems);else E3.days.forEach(function(d){if(ymd(d.date)===id)items=d.items;});
+      if(items){var snD=takeSnap(),all=items.every(function(x){return S.done[x.s.id];});items.forEach(function(x){if(all)setSec(x.s.id,false);else if(!S.done[x.s.id])setSec(x.s.id,true);});after({snap:snD});render();}break;}
+    case 'jumpToday':{if(S.hideDone){S.hideDone=false;save();render();}scrollToday();break;}
+    case 'fav':if(S.fav[id])delete S.fav[id];else S.fav[id]=1;save();{var rl=$('#rlist');if(rl)rl.innerHTML=resList();}break;
+    case 'ptab':F.ptab=id;render();break;
+    case 'rfav':F.rfav=!F.rfav;el.setAttribute('aria-pressed',F.rfav);$('#rlist').innerHTML=resList();break;
+    case 'rtype':F.rt=id;[].forEach.call(document.querySelectorAll('#rtypes .pill'),function(b){b.setAttribute('aria-pressed',b.dataset.id===id);});$('#rlist').innerHTML=resList();break;
+    case 'rev':{var r=S.rev[id];if(!r)break;if(el.dataset.v==='1'){S.revN++;var ns=r.st+1;if(ns>=REVIEW_DAYS.length)delete S.rev[id];else S.rev[id]={st:ns,due:ymd(addDays(todayD(),REVIEW_DAYS[ns]))};}else S.rev[id]={st:0,due:ymd(addDays(todayD(),1))};after();render();break;}
+    case 'timerStart':S.timer={end:Date.now()+(+id)*60000,len:+id};save();render();startTick();break;
+    case 'timerStop':finishTimer(false);break;
+    case 'logMin':addFocus(+id);after();render();toast('Logged '+id+' minutes');break;
+    case 'share':openShare();break;
+    case 'settings':openSettings();break;
+    case 'close':closeDlg();break;
+    case 'day':{var dn=+el.dataset.d,i=S.days.indexOf(dn);if(i>=0){if(S.days.length>1)S.days.splice(i,1);}else S.days.push(dn);save();openSettings(true);render();break;}
+    case 'theme':S.theme=el.dataset.v;applyTheme();save();openSettings(true);break;
+    case 'celeb':S.celeb=!S.celeb;save();openSettings(true);break;
+    case 'sound':S.sound=!S.sound;save();openSettings(true);tick(false);break;
+    case 'celebTest':previewFx();break;
+    case 'achClose':$('#ach').classList.remove('on');clearTimeout(achT);break;
+    case 'markDone':{var n=0;[].forEach.call(document.querySelectorAll('#prior input:checked'),function(c){BY[c.value].secs.forEach(function(s){if(!S.done[s.id]){S.done[s.id]='x';n++;}});});after({silent:true});render();openSettings(true);toast(n+' sections marked done');break;}
+    case 'startToday':S.start=ymd(todayD());save();render();openSettings(true);break;
+    case 'export':doExport();break;
+    case 'copyBackup':copyText(JSON.stringify(S),'Backup');break;
+    case 'doImport':try{var o=JSON.parse($('#impText').value);S=norm(o,false);if(!S.start)S.start=ymd(todayD());FX=null;pStop();awardBadges();sealCel();save();applyTheme();render();closeDlg();toast('Backup imported');}catch(err){toast('That is not a valid backup');}break;
+    case 'reset':{var now=Date.now();if(now-lastResetTap<4000){S=def();S.start=ymd(todayD());FX=null;save();applyTheme();render();closeDlg();toast('All progress erased');lastResetTap=0;}else{lastResetTap=now;el.textContent='Click again to erase everything';setTimeout(function(){if(el.isConnected)el.textContent='Reset all progress';},4000);}break;}
+    case 'shareCopy':copyText($('#shareText').value,'Post text');break;
+    case 'shareDl':shareDownload();break;
+  }
+}
+function doExport(){
+  var txt=JSON.stringify(S,null,2);
+  try{var b=new Blob([txt],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='cdsa-tracker-backup-'+ymd(todayD())+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},1000);toast('Backup downloaded');}catch(e){copyText(txt,'Backup');}
+}
+
+/* settings */
+var dlg;
+function openSettings(keep){
+  var E=engine();
+  var h='<div class="dlg"><header><h3>Settings</h3><button class="btn sm ghost" data-act="close">Close</button></header><div class="body">';
+  h+='<div><h4>Plan</h4><div class="grid2" style="gap:12px"><label class="f">Finish in (days from start)<input type="number" id="sTarget" min="7" max="400" value="'+S.target+'"></label><label class="f">Exam date (optional)<input type="date" id="sExam" value="'+esc(S.exam)+'"></label></div>'
+    +'<div style="margin-top:12px"><span class="note" style="display:block;margin-bottom:6px">Study days</span><div class="days">'+[[1,'Mon'],[2,'Tue'],[3,'Wed'],[4,'Thu'],[5,'Fri'],[6,'Sat'],[0,'Sun']].map(function(d){return '<button data-act="day" data-d="'+d[0]+'" aria-pressed="'+(S.days.indexOf(d[0])>=0)+'">'+d[1]+'</button>';}).join('')+'</div></div>'
+    +'<p class="note" style="margin-top:10px">Started '+fmtL(E.start)+' (the day you first opened this page). The plan finishes by '+fmtL(E.deadline)+(S.exam?', a week before your exam':'')+'. It is rebuilt every day from what is left.</p>'
+    +'<details style="margin-top:8px"><summary class="note" style="cursor:pointer">Advanced: change start date</summary><div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><input type="date" id="sStart" value="'+esc(S.start)+'" style="max-width:200px"><button class="btn sm" data-act="startToday">Use today</button></div></details></div>';
+  h+='<div><h4>Theme</h4><div class="seg">'+['system','light','dark'].map(function(t){return '<button data-act="theme" data-v="'+t+'" aria-pressed="'+(S.theme===t)+'">'+t[0].toUpperCase()+t.slice(1)+'</button>';}).join('')+'</div></div>';
+  h+='<div><h4>Celebrations</h4>'
+    +'<div class="swrow"><div><b id="lbCel">Celebrations</b><small>Pops, confetti and milestone banners when you finish things.'+(reduced()?' Your device asks for reduced motion, so you get static highlights and no particles.':' Respects the reduced-motion setting on your device.')+'</small></div><div class="swctl"><span class="mono">'+(S.celeb?'On':'Off')+'</span><button class="switch" role="switch" aria-checked="'+S.celeb+'" aria-labelledby="lbCel" data-act="celeb"></button></div></div>'
+    +'<div class="swrow"><div><b id="lbSnd">Sound</b><small>One soft tick, generated in the browser. Off by default.</small></div><div class="swctl"><span class="mono">'+(S.sound?'On':'Off')+'</span><button class="switch" role="switch" aria-checked="'+S.sound+'" aria-labelledby="lbSnd" data-act="sound"></button></div></div>'
+    +'<div style="margin-top:6px"><button class="btn sm" data-act="celebTest">Preview a celebration</button></div></div>';
+  h+='<div><h4>Already finished some modules?</h4><div class="mlist" id="prior">'+MODS.map(function(m){var x=modStat(m);return '<label><input class="cb" type="checkbox" value="'+m.id+'"'+(x.done===x.total?' checked disabled':'')+'><span>'+esc(m.name)+'</span></label>';}).join('')+'</div><div style="margin-top:10px"><button class="btn sm" data-act="markDone">Mark selected as done</button></div></div>';
+  h+='<div><h4>Backup</h4><p class="note" style="margin-bottom:10px">Progress is saved in this browser only. Export a backup now and then, and before clearing site data.'+(memOnly?' <b class="warnt">Browser storage is unavailable right now, so progress will not persist.</b>':'')+'</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" data-act="export">Download backup</button><button class="btn sm" data-act="copyBackup">Copy backup</button></div><label class="f" style="margin-top:12px">Restore: paste a backup, or choose a file<textarea id="impText" placeholder="Paste backup JSON here"></textarea></label><div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center"><button class="btn sm" data-act="doImport">Restore from text</button><input type="file" id="impFile" accept="application/json,.json" style="max-width:230px"></div></div>';
+  h+='<div><button class="btn sm danger" data-act="reset">Reset all progress</button></div></div></div>';
+  dlg.innerHTML=h;
+  if(!keep){if(dlg.showModal)dlg.showModal();else dlg.setAttribute('open','');}
+}
+function closeDlg(){if(dlg.close)dlg.close();else dlg.removeAttribute('open');}
+
+/* share */
+function shareStats(){
+  var E=engine(),c=doneDates(),s1=stageStat(1),s0=stageStat(0),all=E.total?E.done/E.total:0;
+  return {E:E,all:all,s0:s0,s1:s1,streak:streakNow(c),hours:totalFocus()/60,day:E.notStarted?0:E.dayNo};
+}
+function shareText(){
+  var x=shareStats();
+  return 'Day '+x.day+' of working through the HTB SOC Analyst path for the CDSA: '+x.E.done+' of '+x.E.total+' sections done ('+pct(x.all)+'%), '+x.streak+'-day streak, '+Math.round(x.hours*10)/10+' focused hours. Studying one section at a time. #CDSA #BlueTeam #HackTheBox';
+}
+function drawShare(cv){
+  var x=shareStats(),W=1200,H=630,g=cv.getContext('2d');cv.width=W;cv.height=H;
+  var dark=document.documentElement.getAttribute('data-theme')==='dark'||(!document.documentElement.getAttribute('data-theme')&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  var bg=dark?'#0B0F19':'#F1F4F9',card=dark?'#111927':'#FFFFFF',fg=dark?'#E8EEF8':'#0B1220',mu=dark?'#A3B0C5':'#4A5870',ac=dark?'#9FEF00':'#2F7D00',tr=dark?'#1B2639':'#E3E9F1';
+  g.fillStyle=bg;g.fillRect(0,0,W,H);
+  g.fillStyle=card;rr(g,40,40,W-80,H-80,28);g.fill();
+  g.fillStyle=mu;g.font='600 24px ui-monospace,Menlo,Consolas,monospace';g.fillText('HTB SOC ANALYST PATH  ·  CDSA  ·  '+rankInfo().name.toUpperCase(),90,110);
+  g.fillStyle=fg;g.font='700 64px system-ui,Segoe UI,Arial,sans-serif';g.fillText('Day '+x.day+' of my CDSA study plan',90,200);
+  // ring
+  var cx=300,cy=400,r=120;g.lineWidth=26;g.lineCap='round';g.strokeStyle=tr;g.beginPath();g.arc(cx,cy,r,0,Math.PI*2);g.stroke();
+  g.strokeStyle=ac;g.beginPath();g.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*x.all);g.stroke();
+  g.fillStyle=fg;g.textAlign='center';g.font='700 64px system-ui,Segoe UI,Arial,sans-serif';g.fillText(pct(x.all)+'%',cx,cy+20);g.fillStyle=mu;g.font='500 22px system-ui,Segoe UI,Arial,sans-serif';g.fillText(x.E.done+' / '+x.E.total+' sections',cx,cy+56);g.textAlign='left';
+  var stats=[[x.streak+(x.streak===1?' day':' days'),'streak'],[(Math.round(x.hours*10)/10)+' h','focused time'],[x.s1.done+' / '+x.s1.total,'SOC Analyst path'],[x.s0.done+' / '+x.s0.total,'basics']];
+  stats.forEach(function(s,i){var px=560+(i%2)*300,py=330+Math.floor(i/2)*130;g.fillStyle=fg;g.font='700 44px system-ui,Segoe UI,Arial,sans-serif';g.fillText(s[0],px,py);g.fillStyle=mu;g.font='500 22px system-ui,Segoe UI,Arial,sans-serif';g.fillText(s[1],px,py+34);});
+}
+function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+function openShare(){
+  dlg.innerHTML='<div class="dlg"><header><h3>Share your progress</h3><button class="btn sm ghost" data-act="close">Close</button></header><div class="body"><canvas id="shareCv" style="width:100%;height:auto;border-radius:12px;border:1px solid var(--line)"></canvas><label class="f">Post text<textarea id="shareText"></textarea></label><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary sm" data-act="shareCopy">Copy post text</button><button class="btn sm" data-act="shareDl">Download image</button></div><p class="note">Paste it into LinkedIn, Reddit or Discord. Nothing is uploaded anywhere.</p></div></div>';
+  if(dlg.showModal)dlg.showModal();else dlg.setAttribute('open','');
+  drawShare($('#shareCv'));$('#shareText').value=shareText();
+}
+function shareDownload(){
+  try{$('#shareCv').toBlob(function(b){var u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='cdsa-progress.png';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},1000);toast('Image downloaded');});}catch(e){toast('Right-click the image to save it');}
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',function(e){
+  var el=e.target.closest('[data-act]');if(!el)return;
+  var a=el.dataset.act;
+  if(a==='sec'||a==='lab'||a==='gate'||a==='note'||a==='dnote')return;
+  onAction(el);
+});
+document.addEventListener('change',function(e){
+  var el=e.target;
+  if(el.id==='sStart'&&el.value){S.start=el.value;save();render();openSettings(true);return;}
+  if(el.id==='sTarget'){var v=Math.round(+el.value);if(v>=7){S.target=Math.min(400,v);S.exam='';save();render();openSettings(true);}return;}
+  if(el.id==='sExam'||el.id==='xDate'){S.exam=el.value||'';save();render();if(el.id==='sExam')openSettings(true);return;}
+  if(el.id==='impFile'&&el.files&&el.files[0]){var r=new FileReader();r.onload=function(){$('#impText').value=String(r.result);toast('File loaded. Press Restore.');};r.readAsText(el.files[0]);return;}
+  var a=el.dataset&&el.dataset.act,id=el.dataset&&el.dataset.id;
+  if(a==='sec'){var snap=takeSnap();setSec(id,el.checked);after({snap:snap,tick:{id:id,on:el.checked,kind:'sec'}});var sc=window.scrollY;if(tab==='path'){renderList();chrome();playFx();}else render();window.scrollTo(0,sc);var again=document.getElementById(el.id);if(again)try{again.focus({preventScroll:true});}catch(x){}}
+  else if(a==='lab'){if(el.checked)S.labs[id]=1;else delete S.labs[id];after({tick:{id:id,on:el.checked,kind:id.indexOf('p.')===0?'prob':'lab'}});render();}
+  else if(a==='gate'){if(el.checked)S.gate[id]=1;else delete S.gate[id];after();render();}
+});
+document.addEventListener('input',function(e){
+  var el=e.target;
+  if(el.id==='q'){F.q=el.value;renderList();return;}
+  if(el.id==='rq'){F.rq=el.value;$('#rlist').innerHTML=resList();return;}
+  if(!el.dataset)return;
+  if(el.dataset.act==='dnote'){S.dnotes[el.dataset.id]=el.value;if(!el.value)delete S.dnotes[el.dataset.id];save();return;}
+  if(el.dataset.act==='note'){S.notes[el.dataset.id]=el.value;if(!el.value)delete S.notes[el.dataset.id];save();}
+});
+window.addEventListener('hashchange',function(){var h=(location.hash||'').replace('#','');if(h==='dash')h='today';if(TABS.indexOf(h)>=0&&h!==tab){tab=h;render();if(h==='plan')setTimeout(scrollToday,0);}});
+
+/* ---------- clock and day rollover ---------- */
+function tickClock(){
+  var n=new Date(),txt=n.toLocaleString(undefined,{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  [].forEach.call(document.querySelectorAll('.clock'),function(c){c.textContent=txt;});
+  var k=ymd(todayD());
+  if(k!==lastDay){lastDay=k;render();toast('New day: '+fmtL(todayD()));}
+  if(S.timer&&S.timer.end<=Date.now())finishTimer(true,true);
+}
+setInterval(tickClock,15000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)tickClock();});
+window.addEventListener('focus',tickClock);
+
+/* ---------- boot ---------- */
+dlg=$('#dlg');
+dlg.addEventListener('click',function(e){if(e.target===dlg)closeDlg();});
+if(!S.start){S.start=ymd(todayD());persist();}
+applyTheme();
+awardBadges();
+sealCel();
+render();
+tickClock();
+startTick();
+if(tab==='plan')setTimeout(scrollToday,0);
+})();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+name: build
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  index-is-up-to-date:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Rebuild index.html from src/
+        run: python3 src/build.py
+      - name: Fail if the committed index.html is stale
+        run: git diff --exit-code -- index.html

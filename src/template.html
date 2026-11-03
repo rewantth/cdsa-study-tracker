@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="{{CSP}}">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CDSA Study Tracker</title>
+<meta name="theme-color" content="#0B0F19" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F1F4F9" media="(prefers-color-scheme: light)">
+<script>/* set the theme before first paint (dark is the default) */try{var _s=JSON.parse(localStorage.getItem("cdsa-tracker-v4")||"null"),_t=_s&&_s.theme;if(_t==="light"||_t==="dark")document.documentElement.setAttribute("data-theme",_t);else if(_t!=="system")document.documentElement.setAttribute("data-theme","dark");}catch(e){document.documentElement.setAttribute("data-theme","dark");}</script>
+<meta name="description" content="A section-by-section study tracker for the HTB SOC Analyst path and the CDSA exam. Works offline; progress is saved in your browser.">
+<style>
+{{STYLE}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><span class="logo" aria-hidden="true">CD</span><div><b>CDSA Tracker</b><small>SOC Analyst path</small></div></div>
+    <div class="rankcard" id="rankcard"></div>
+    <div class="clock mono" aria-label="Current date and time"></div>
+    <nav class="nav" id="nav" aria-label="Sections"></nav>
+    <div class="side-foot">
+      <div class="mini" id="mini"></div>
+      <button class="btn" data-act="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>Settings and backup</button>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="wrap">
+      <div class="mtop"><div class="brand"><span class="logo" aria-hidden="true">CD</span><div><b>CDSA Tracker</b><small class="clock mono"></small></div></div><span class="mrank" id="mrank"></span><button class="btn sm" data-act="settings">Settings</button></div>
+      <div id="view" class="wrap"></div>
+    </div>
+  </main>
+  <nav class="bottom" id="bnav" aria-label="Sections"></nav>
+</div>
+<dialog id="dlg" aria-label="Settings"></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="ach" id="ach" role="status" aria-live="polite"></div>
+<script>
+{{DATA}}{{APP}}</script>
+</body>
+</html>
