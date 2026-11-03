@@ -12,7 +12,7 @@ A free, single-file study tracker for the Hack The Box **SOC Analyst path** and 
 
 Pick one:
 
-- **Open the live page** if the owner has enabled GitHub Pages for this repository (Settings, Pages). Bookmark it. Your progress is saved against that address.
+- **Open the live page: <https://rewantth.github.io/cdsa-study-tracker/>.** Bookmark it. Your progress is saved against that address.
 - **Download it.** Save `index.html` and double-click it. It works offline. Keep the file in one place: progress is stored per file location, so moving it looks like a reset (restore a backup to recover).
 - **Host your own copy.** Fork this repository, then in **Settings, Pages** choose "Deploy from a branch", branch `main`, folder `/ (root)`. Your copy is then at `https://YOUR-USERNAME.github.io/REPO-NAME/`.
 
